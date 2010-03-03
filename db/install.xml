@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/adobeconnect/db" VERSION="20100216" COMMENT="XMLDB file for Moodle mod/adobeconnect"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="adobeconnect" COMMENT="Default comment for adobeconnect, please edit me" NEXT="adobeconnect_meeting_groups">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="course"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Course adobeconnect activity belongs to" PREVIOUS="id" NEXT="name"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" ENUM="false" COMMENT="name field for moodle instances" PREVIOUS="course" NEXT="intro"/>
+        <FIELD NAME="intro" TYPE="text" LENGTH="medium" NOTNULL="false" SEQUENCE="false" ENUM="false" COMMENT="General introduction of the adobeconnect activity" PREVIOUS="name" NEXT="introformat"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Format of the intro field (MOODLE, HTML, MARKDOWN...)" PREVIOUS="intro" NEXT="templatescoid"/>
+        <FIELD NAME="templatescoid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Meeting template sco-id" PREVIOUS="introformat" NEXT="meeturl"/>
+        <FIELD NAME="meeturl" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" ENUM="false" COMMENT="Meeting URL" PREVIOUS="templatescoid" NEXT="starttime"/>
+        <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Meeting start time" PREVIOUS="meeturl" NEXT="endtime"/>
+        <FIELD NAME="endtime" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Meeting start time" PREVIOUS="starttime" NEXT="meetingpublic"/>
+        <FIELD NAME="meetingpublic" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Meetings can be public or non-public" PREVIOUS="endtime" NEXT="timecreated"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" PREVIOUS="meetingpublic" NEXT="timemodified"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" PREVIOUS="timecreated"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="adobeconnect_meeting_groups" COMMENT="Reference table used to link group meetings from Adobe server to a Moodle activity" PREVIOUS="adobeconnect">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="instanceid"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="20" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="meetingscoid"/>
+        <FIELD NAME="meetingscoid" TYPE="int" LENGTH="20" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Meeting sco-id" PREVIOUS="instanceid" NEXT="groupid"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="255" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Moodle group id" PREVIOUS="meetingscoid"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="instanceid_idx" UNIQUE="false" FIELDS="instanceid" NEXT="groupid_idx"/>
+        <INDEX NAME="groupid_idx" UNIQUE="false" FIELDS="groupid" PREVIOUS="instanceid_idx"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+  <STATEMENTS>
+    <STATEMENT NAME="insert log_display" TYPE="insert" TABLE="log_display" COMMENT="Initial insert of records on table log_display. Each record describes how data will be showed by log reports.">
+      <SENTENCES>
+        <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'add', 'adobeconnect', 'name')" />
+        <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'update', 'adobeconnect', 'name')" />
+        <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'view', 'adobeconnect', 'name')" />
+      </SENTENCES>
+    </STATEMENT>
+  </STATEMENTS>
+</XMLDB>
