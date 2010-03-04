@@ -2,9 +2,9 @@
 
 /**
  * connection class
- * 
+ *
  * This class communicates with an adobe connect server making REST calls
- * to access the Adobe Connect API 
+ * to access the Adobe Connect API
  */
 
 class connect_class {
@@ -17,7 +17,7 @@ class connect_class {
     var $_xmlresponse;
     var $_apicall;
     var $_connection;
-    
+
     public function __construct($serverurl = '', $serverport = '', $username = '', $password = '', $cookie = '') {
         $this->_serverurl = $serverurl;
         $this->_serverport = $serverport;
@@ -25,66 +25,66 @@ class connect_class {
         $this->_password = $password;
         $this->_cookie = $cookie;
     }
-    
+
     /**
      * Accessor methods
      */
     public function set_serverport($serverport = '') {
         $this->_serverport = $serverport;
     }
-    
+
     public function set_serverurl($serverurl = '') {
         $this->_serverurl = $serverurl;
     }
-    
+
     public function set_username($username = '') {
         $this->_username = $username;
     }
-    
+
     public function set_password($password = '') {
         $this->_password = $password;
     }
-    
+
     public function set_cookie($cookie = '') {
         $this->_cookie = $cookie;
     }
-    
+
     public function set_xmlrequest($xml = '') {
         $this->_xmlrequest = $xml;
     }
 
-    public function set_connection($connection = '') {
+    public function set_connection($connection = 0) {
         $this->_connection = $connection;
     }
-    
+
     public function get_serverurl() {
         return $this->_serverurl;
     }
-    
+
     public function get_username() {
         return $this->_username;
     }
-    
+
     public function get_password() {
         return $this->_password;
     }
-    
+
     public function get_cookie() {
         return $this->_cookie;
     }
-    
+
     public function get_connection() {
         return $this->_connection;
     }
-    
+
     public function get_serverport() {
         return $this->_serverport;
     }
-    
+
     private function get_deafult_header() {
         return array('Content-Type: text/xml');
     }
-    
+
     /**
      * Posts XML to the Adobe Connect server and returns the results
      * @param int $return_header 1 to include the response header, 0 to not
@@ -100,12 +100,11 @@ class connect_class {
         } else {
             curl_setopt($ch, CURLOPT_URL, $this->_serverurl . '?session='. $this->_cookie);
         }
-        
- 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $this->_xmlrequest); 
+
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $this->_xmlrequest);
         curl_setopt($ch, CURLOPT_POST, 1);
-        // MAY NOT NEED LINE BELOW
         curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
 
         curl_setopt($ch, CURLOPT_PORT, $this->_serverport);
@@ -114,12 +113,12 @@ class connect_class {
         $header = array_merge($header, $add_header);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        
+
         // Include header from response
         curl_setopt($ch, CURLOPT_HEADER, $return_header);
-        
+
         $result = curl_exec($ch);
-  
+
         curl_close($ch);
 
         return $result;
@@ -133,20 +132,20 @@ class connect_class {
 
         $hearder = array();
         $this->create_http_head_login_xml();
-        
+
         // The first parameter is 1 because we want to include the response header
         // to extract the session cookie
         if (!empty($username)) {
             $hearder = array('rl-user-id: ' . $username);
         }
-        
+
         $this->_xmlresponse = $this->send_request($return_header, $hearder, $stop);
-        
+
         $this->set_session_cookie($this->_xmlresponse);
-        
+
         return $this->_xmlresponse;
     }
-    
+
 
     public function create_request($params = array(), $sentrequest = true) {
         if (empty($params)) {
@@ -156,10 +155,10 @@ class connect_class {
 
         $writer = new XMLWriter();
         $writer->openMemory();
-        $writer->startDocument('1.0', 'UTF-8'); 
+        $writer->startDocument('1.0', 'UTF-8');
 
         $writer->startElement('params');
-        
+
         foreach($params as $key => $data) {
             $writer->startElement('param');
             $writer->writeAttribute('name', $key);
@@ -168,11 +167,11 @@ class connect_class {
         }
 
         $writer->endElement();
-        
+
         $writer->endDocument();
 
         $this->_xmlrequest = $writer->outputMemory();
-        
+
         if ($sentrequest) {
             $this->_xmlresponse = $this->send_request();
         }
@@ -184,22 +183,21 @@ class connect_class {
      * @param nothing
      * @return nothing
      */
-//////////////////////////// MISC. FUNCTIONS /////////////////////////
     public function set_session_cookie($data) {
         $sessionval = false;
         $sessionstart = strpos($data, 'BREEZESESSION=');
-        
+
         if (false !== $sessionstart) {
             $sessionend = strpos($data, ';');
 //            $sessionend = strpos($data, 'Expires:');
-            
+
             $sessionlength = strlen('BREEZESESSION=');
             $sessionvallength = $sessionend - ($sessionstart + $sessionlength);
             $sessionval = substr($data, $sessionstart+$sessionlength, $sessionvallength);
         }
-        
+
         $this->_cookie = $sessionval;
-        
+
         return $sessionval;
     }
 
@@ -225,8 +223,8 @@ class connect_class {
         }
 
         $reader->close();
-        
-         return $return;   
+
+         return $return;
 
     }
 
@@ -235,70 +233,78 @@ class connect_class {
      * @param string $xml the xml to parse through
      * @return string $sessoin returns the session id
      */
-    public function read_cookie_xml($xml) {
+    public function read_cookie_xml($xml = '') {
+        try {
 
-        $session = false;
-//        $accountid = false;
-        $reader = new XMLReader();
-        $reader->XML($xml, 'UTF-8');
+            if (empty($xml)) {
+                throw new Exception();
+            }
 
-        while ($reader->read()) {
-            if (0 == strcmp($reader->name, 'cookie')) {
-                if (1 == $reader->nodeType) {
-                    $session = $reader->readString();
+            $session = false;
+//            $accountid = false;
+            $reader = new XMLReader();
+            $reader->XML($xml, 'UTF-8');
+
+            while ($reader->read()) {
+	            if (0 == strcmp($reader->name, 'cookie')) {
+                    if (1 == $reader->nodeType) {
+                        $session = $reader->readString();
+                    }
                 }
             }
+
+            $reader->close();
+
+            $this->_cookie = $session;
+
+            return $session;
+        } catch (Exception $e) {
+            debugging("There was an error communicating with the Adobe Connect server.".
+                      "\nPlease contact the site administrator and describe the steps to reproduce the issue", DEBUG_DEVELOPER);
         }
 
-        $reader->close();
-        
-        $this->_cookie = $session;
-    
-        return $session;   
     }
-    
+
     public function response_to_object() {
         $xml = new SimpleXMLElement($this->_xmlresponse);
-        
+
         return $xml;
     }
 
     public function call_success() {
-        $xml = new SimpleXMLElement($this->_xmlresponse);
-        if (0 == strcmp('ok', $xml->status[0]['code'])) {
-            return true;
-        } else {
+        try {
+            $xml = new SimpleXMLElement($this->_xmlresponse);
+            if (0 == strcmp('ok', $xml->status[0]['code'])) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
             return false;
         }
     }
 
-    /** THIS MAY CHANGE
-     * Creates the xml request needed to log in the user
-     * using HTTP HEADER authentication
-     * @param nothing
-     * @return nothing
-     */
     private function create_http_head_login_xml() {
         @date_default_timezone_set("GMT");
 
         $writer = new XMLWriter();
         $writer->openMemory();
-        $writer->startDocument('1.0', 'UTF-8'); 
+        $writer->startDocument('1.0', 'UTF-8');
 
         $writer->startElement('params');
 
-            $writer->startElement('param');
-            $writer->writeAttribute('name', 'action');
-            $writer->text('login');
-            $writer->endElement();
-            
-            $writer->startElement('param');
-            $writer->writeAttribute('name', 'external-auth');
-            $writer->text('use');
-            $writer->endElement();
+        $writer->startElement('param');
+        $writer->writeAttribute('name', 'action');
+        $writer->text('login');
+        $writer->endElement();
+
+        $writer->startElement('param');
+        $writer->writeAttribute('name', 'external-auth');
+        $writer->text('use');
+        $writer->endElement();
 
         $writer->endElement();
-        
+
         $writer->endDocument();
 
         $this->_xmlrequest = $writer->outputMemory();
