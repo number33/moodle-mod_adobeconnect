@@ -12,7 +12,7 @@ You will then be prompted to enter details about Adobe Connect Pro server.
 Once that is complete you can begin to create and administer meetings.
 
 
-Maintainer Contact information:
+Maintainer Contact information
 Company: Remote Learner
 Author: Akinsaya Delamarre
 Email: adelamarre@remote-learner.net
