@@ -149,8 +149,10 @@ if (!empty($meetscoids)) {
     if (!($usrprincipal = aconnect_user_exists($aconnect, $USER))) {
         if (!($usrprincipal = aconnect_create_user($aconnect, $USER))) {
             // DEBUG
-            print_object("error creating user");
-            print_object($aconnect->_xmlresponse);
+            debugging("error creating user", DEBUG_DEVELOPER);
+
+//            print_object("error creating user");
+//            print_object($aconnect->_xmlresponse);
             $validuser = false;
         }
     }
@@ -167,9 +169,10 @@ if (!empty($meetscoids)) {
                 // echo 'true';
             } else {
                 //DEBUG
-                print_object('error assign user recording folder permissions');
-                print_object($aconnect->_xmlrequest);
-                print_object($aconnect->_xmlresponse);
+                debugging("error assign user recording folder permissions", DEBUG_DEVELOPER);
+//                print_object('error assign user recording folder permissions');
+//                print_object($aconnect->_xmlrequest);
+//                print_object($aconnect->_xmlresponse);
             }
         }
     } else {
@@ -221,7 +224,15 @@ $aconnect = aconnect_login();
 $scoid = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
 $meetfldscoid = aconnect_get_meeting_folder($aconnect);
 $filter = array('filter-sco-id' => $scoid);
-$meeting = current(aconnect_meeting_exists($aconnect, $meetfldscoid, $filter));
+
+if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
+    $meeting = current($meeting);
+} else {
+    notice('No meeting exists on the server');
+aconnect_logout($aconnect);
+    die();
+}
+
 
 aconnect_logout($aconnect);
 
@@ -250,7 +261,9 @@ echo '</div>'."\n";
 
 echo '</div>'."\n";
 
-if (has_capability('mod/adobeconnect:meetingpresenter', $context)) {
+if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
+    has_capability('mod/adobeconnect:meetinghost', $context)) {
+
     $url = 'http://' . $CFG->adobeconnect_meethost . ':' 
                      . $CFG->adobeconnect_port . $meeting->url;
     echo '<div class="aconmeetinforow">'."\n";
@@ -316,7 +329,8 @@ echo button_to_popup_window('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='
                             'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
 echo '</div>'."\n";
 
-if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) ){
+if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
+    has_capability('mod/adobeconnect:meetinghost', $context, $USER->id)){
     echo '<div class="aconbtnroles">'."\n";
     echo '<input type="submit" name="participants" value="'.get_string('selectparticipants', 'adobeconnect').'">';
     echo '</div>'."\n";
