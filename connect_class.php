@@ -234,10 +234,8 @@ class connect_class {
      * @return string $sessoin returns the session id
      */
     public function read_cookie_xml($xml = '') {
-        try {
-
             if (empty($xml)) {
-                throw new Exception();
+                print_error('emptyxml', 'adobeconnect', '', 'read_cookie_xml');
             }
 
             $session = false;
@@ -258,11 +256,6 @@ class connect_class {
             $this->_cookie = $session;
 
             return $session;
-        } catch (Exception $e) {
-            debugging("There was an error communicating with the Adobe Connect server.".
-                      "\nPlease contact the site administrator and describe the steps to reproduce the issue", DEBUG_DEVELOPER);
-        }
-
     }
 
     public function response_to_object() {
@@ -272,14 +265,14 @@ class connect_class {
     }
 
     public function call_success() {
-        try {
-            $xml = new SimpleXMLElement($this->_xmlresponse);
-            if (0 == strcmp('ok', $xml->status[0]['code'])) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (Exception $e) {
+        if (empty($this->_xmlresponse)) {
+            print_error('emptyxml', 'adobeconnect', '', 'call_success');
+        }
+
+        $xml = new SimpleXMLElement($this->_xmlresponse);
+        if (0 == strcmp('ok', $xml->status[0]['code'])) {
+            return true;
+        } else {
             return false;
         }
     }

@@ -68,4 +68,7 @@ $string['usergrouprequired'] = 'This Meeting requires users to be in a group in 
 $string['adobeconnect:meetingpresenter'] = 'Meeting Presenter';
 $string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
 $string['adobeconnect:meetinghost'] = 'Meeting Host';
+
+// Error codes
+$string['emptyxml'] = 'Invalid XML was detected method: $a';
 ?>
