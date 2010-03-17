@@ -27,7 +27,7 @@
 
     print_string('conntestintro', 'adobeconnect');
 
-    adobe_connection_test($serverhost, $port, $username, $password);
+    adobe_connection_test($serverhost, $port, $username, $password, $httpheader);
 
     echo '<center>'. "\n";
     echo '<input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" />';

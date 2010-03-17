@@ -29,7 +29,7 @@ function adobe_connection_test($host = '', $port = '', $username = '', $password
 
         echo "</p>One of the required parameters is blank: <br />".
              "Host: $host<br /> Port: $port<br /> Username: $username<br /> Password: $password".
-             "<br /> HTTP Herder: $httpheader</p>";
+             "<br /> HTTP Header: $httpheader</p>";
     }
 
     $messages = array();
