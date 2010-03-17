@@ -129,6 +129,7 @@ class connect_class {
      * @param string username username to use for header x-user-id
      */
     public function request_http_header_login($return_header = 0, $username = '', $stop = false) {
+        global $CFG;
 
         $hearder = array();
         $this->create_http_head_login_xml();
@@ -136,7 +137,8 @@ class connect_class {
         // The first parameter is 1 because we want to include the response header
         // to extract the session cookie
         if (!empty($username)) {
-            $hearder = array('rl-user-id: ' . $username);
+            //$hearder = array('rl-user-id: ' . $username);
+            $hearder = array("$CFG->adobeconnect_admin_httpauth: " . $username);
         }
 
         $this->_xmlresponse = $this->send_request($return_header, $hearder, $stop);

@@ -12,6 +12,7 @@ function adobetestConnection(obj) {
     queryString += "&port=" + obj.id_s__adobeconnect_port.value;
     queryString += "&authUsername=" + escape(obj.id_s__adobeconnect_admin_login.value);
     queryString += "&authPassword=" + escape(obj.id_s__adobeconnect_admin_password.value);
+    queryString += "&authHTTPheader=" + escape(obj.id_s__adobeconnect_admin_httpauth.value);
     
     return openpopup('/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest', 'scrollbars=yes,resizable=no,width=640,height=300');
 }

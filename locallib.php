@@ -19,15 +19,17 @@ define('ADOBE_MEETPERM_PUBLIC', 0); //means the Acrobat Connect meeting is publi
 define('ADOBE_MEETPERM_PROTECTED', 1); //means the meeting is protected, and only registered users and accepted guests can enter the room.
 define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only registered users and participants can enter the room
 
-function adobe_connection_test($host = '', $port = '', $username = '', $password = '') {
+function adobe_connection_test($host = '', $port = '', $username = '', $password = '', $httpheader = '') {
 
     if (empty($host) or
         empty($port) or
         empty($username) or
-        empty($password)) {
+        empty($password) or
+        empty($httpheader)) {
 
         echo "</p>One of the required parameters is blank: <br />".
-             "Host: $host<br /> Port: $port<br /> Username: $username<br /> Password: $password</p>";
+             "Host: $host<br /> Port: $port<br /> Username: $username<br /> Password: $password".
+             "<br /> HTTP Herder: $httpheader</p>";
     }
 
     $messages = array();
