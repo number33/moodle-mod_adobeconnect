@@ -15,6 +15,7 @@ require_once(dirname(__FILE__).'/lib.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/meeting_detail_form.php');
 require_once(dirname(__FILE__).'/connect_class.php');
+require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $a  = optional_param('a', 0, PARAM_INT);  // adobeconnect instance ID
@@ -75,7 +76,7 @@ print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '',
 if (0 != $cm->groupmode){
     if (empty($groupid)) {
         $groups = groups_get_user_groups($course->id, $USER->id);
-     
+
         if (array_key_exists(0, $groups)) {
             $groupid = current($groups[0]);
         }
@@ -104,7 +105,7 @@ $recording = array();
 
 if (!empty($meetscoids)) {
     $recscoids = array();
-    
+
     $aconnect = aconnect_login();
 
     // Get the forced recordings folder sco-id
@@ -114,7 +115,7 @@ if (!empty($meetscoids)) {
 
         $data = aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid);
 
-        if (!empty($data)) { 
+        if (!empty($data)) {
           // Store recordings in an array to be moved to the Adobe shared folder later on
           $recscoids = array_merge($recscoids, array_keys($data));
 
@@ -161,7 +162,7 @@ if (!empty($meetscoids)) {
     // if it's a public meeting give them permissions regardless
     if ($cm->groupmode) {
         $context = get_context_instance(CONTEXT_MODULE, $id);
-        
+
         if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
             has_capability('mod/adobeconnect:meetingparticipant', $context, $USER->id)) {
             if (aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE)) {
@@ -186,21 +187,21 @@ if (!empty($meetscoids)) {
 $login = $USER->username;
 $password  = $USER->username;
 
-$aconnect = new connect_class($CFG->adobeconnect_host, $CFG->adobeconnect_port);
+$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
 $aconnect->request_http_header_login(1, $login);
 $adobesession = $aconnect->get_cookie();
 
 if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) && confirm_sesskey()) {
 
-    // Edit participants 
+    // Edit participants
     if (isset($formdata->participants)) {
 //        $context = get_context_instance(CONTEXT_MODULE, $id);
         // Using course context because we want the assign page to use that context
         // Otherwise the user would have to re-assign users for every activity instance
         $context = get_context_instance(CONTEXT_COURSE, $course->id);
-        
+
         $roleid = get_field('role', 'id', 'shortname', 'adobeconnectpresenter');
-        
+
         if (!empty($roleid)) {
             redirect("assign.php?id=$id&amp;contextid={$context->id}&amp;roleid=$roleid&amp;groupid={$formdata->group}", '', 0);
         } else {
@@ -208,7 +209,7 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
         }
     }
 
-    // Edit participants 
+    // Edit participants
     if (isset($formdata->viewcontent)) {
         redirect("viewcontent.php?id=$id&amp;groupid=$groupid", '', 0);
     }
@@ -222,14 +223,14 @@ $aconnect = aconnect_login();
 
 // Get the Meeting details
 $scoid = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
-$meetfldscoid = aconnect_get_meeting_folder($aconnect);
+$meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
 $filter = array('filter-sco-id' => $scoid);
 
 if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
     $meeting = current($meeting);
 } else {
-    notice('No meeting exists on the server');
-aconnect_logout($aconnect);
+    notice('No meeting exists on the server', '', $course);
+    aconnect_logout($aconnect);
     die();
 }
 
@@ -264,7 +265,7 @@ echo '</div>'."\n";
 if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     has_capability('mod/adobeconnect:meetinghost', $context)) {
 
-    $url = 'http://' . $CFG->adobeconnect_meethost . ':' 
+    $url = 'http://' . $CFG->adobeconnect_meethost . ':'
                      . $CFG->adobeconnect_port . $meeting->url;
     echo '<div class="aconmeetinforow">'."\n";
 
@@ -275,7 +276,7 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     echo '<div class="aconlabeltext" id="aconmeeturltext">'."\n";
     echo '<label for="lblmeetingurl">'.$url.'</label><br />'."\n";
     echo '</div>'."\n";
-    
+
     echo '</div>'."\n";
 }
 
@@ -349,7 +350,7 @@ echo '<br />';
 $showrecordings = false;
 // Check if meeting is private, if so check the user's capability.  If public show recorded meetings
 if (!$adobeconnect->meetingpublic) {
-    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or 
+    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
         has_capability('mod/adobeconnect:meetingparticipant', $context, $USER->id)) {
             $showrecordings = true;
     }
@@ -359,7 +360,7 @@ if (!$adobeconnect->meetingpublic) {
 
 $recordings = $recording;
 if ($showrecordings and !empty($recordings)) {
-    
+
     echo '<div id="aconfldset2" class="aconfldset">'."\n";
     echo '<fieldset>'."\n";
     echo '<legend>'.get_string('recordinghdr', 'adobeconnect').'</legend>'."\n";
@@ -377,7 +378,7 @@ if ($showrecordings and !empty($recordings)) {
         }
     }
     echo '</div>'."\n";
-    
+
     echo '</fieldset>'."\n";
     echo '</div>'."\n";
 }

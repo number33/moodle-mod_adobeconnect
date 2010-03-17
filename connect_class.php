@@ -234,8 +234,16 @@ class connect_class {
      * @return string $sessoin returns the session id
      */
     public function read_cookie_xml($xml = '') {
+            global $CFG, $USER, $COURSE;
+
             if (empty($xml)) {
-                print_error('emptyxml', 'adobeconnect', '', 'read_cookie_xml');
+                if (is_siteadmin($USER->id)) {
+                    notice(get_string('adminemptyxml', 'adobeconnect'),
+                           $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
+                } else {
+                    notice(get_string('emptyxml', 'adobeconnect'),
+                           '', $COURSE);
+                }
             }
 
             $session = false;
@@ -265,11 +273,20 @@ class connect_class {
     }
 
     public function call_success() {
+        global $CFG, $USER, $COURSE;
+
         if (empty($this->_xmlresponse)) {
-            print_error('emptyxml', 'adobeconnect', '', 'call_success');
+            if (is_siteadmin($USER->id)) {
+                notice(get_string('adminemptyxml', 'adobeconnect'),
+                       $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
+            } else {
+                notice(get_string('emptyxml', 'adobeconnect'),
+                       '', $COURSE);
+            }
         }
 
         $xml = new SimpleXMLElement($this->_xmlresponse);
+
         if (0 == strcmp('ok', $xml->status[0]['code'])) {
             return true;
         } else {

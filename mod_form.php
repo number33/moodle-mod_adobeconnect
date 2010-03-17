@@ -121,7 +121,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
 
         // Search for a Meeting with the same starting name.  It will cause a duplicate
         // meeting name (and error) when the user begins to add participants to the meeting
-        $meetfldscoid = aconnect_get_meeting_folder($aconnect);
+        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
         $filter = array('filter-like-name' => $data['name']);
         $namematches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
@@ -132,16 +132,24 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         // Now search for existing meeting room URLs
         $url = $data['meeturl'];
 
+        // Check to see if there are any trailing slashes or additional parts to the url
+        // ex. mymeeting/mysecondmeeting/  Only the 'mymeeting' part is valid
+        if ((0 != substr_count($url, '/')) and (false !== strpos($url, '/', 1))) {
+            $errors['meeturl'] = get_string('invalidadobemeeturl', 'adobeconnect');
+        }
+
         $filter = array('filter-like-url-path' => $url);
         $urlmatches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
         if (empty($urlmatches)) {
             $urlmatches = array();
         } else {
+
             // format url for comparison
             if ((false === strpos($url, '/')) or (0 != strpos($url, '/'))) {
                 $url = '/' . $url;
             }
+
         }
 
         // Adding activity
@@ -162,13 +170,14 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
 
             // Check Adobe connect server for duplicated names
             foreach($namematches as $matchkey => $match) {
-                if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name']) + 1, false)) {
+                if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
                     $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                 }
             }
 
             foreach($urlmatches as $matchkey => $match) {
-                if (0 == substr_compare($match->url, $url . '_', 0, strlen($url) + 1, false)) {
+                $matchurl = rtrim($match->url, '/');
+                if (0 == substr_compare($matchurl, $url . '_', 0, strlen($url . '_'), false)) {
                     $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
                 }
             }
@@ -187,7 +196,6 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
             foreach($namematches as $matchkey => $match) {
                 if (!array_key_exists($match->scoid, $grpmeetings)) {
                     if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
-                        die();
                         $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                     }
                 }
