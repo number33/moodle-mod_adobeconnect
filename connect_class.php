@@ -234,10 +234,16 @@ class connect_class {
      * @return string $sessoin returns the session id
      */
     public function read_cookie_xml($xml = '') {
-        try {
+            global $CFG, $USER, $COURSE;
 
             if (empty($xml)) {
-                throw new Exception();
+                if (is_siteadmin($USER->id)) {
+                    notice(get_string('adminemptyxml', 'adobeconnect'),
+                           $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
+                } else {
+                    notice(get_string('emptyxml', 'adobeconnect'),
+                           '', $COURSE);
+                }
             }
 
             $session = false;
@@ -258,11 +264,6 @@ class connect_class {
             $this->_cookie = $session;
 
             return $session;
-        } catch (Exception $e) {
-            debugging("There was an error communicating with the Adobe Connect server.".
-                      "\nPlease contact the site administrator and describe the steps to reproduce the issue", DEBUG_DEVELOPER);
-        }
-
     }
 
     public function response_to_object() {
@@ -272,14 +273,23 @@ class connect_class {
     }
 
     public function call_success() {
-        try {
-            $xml = new SimpleXMLElement($this->_xmlresponse);
-            if (0 == strcmp('ok', $xml->status[0]['code'])) {
-                return true;
+        global $CFG, $USER, $COURSE;
+
+        if (empty($this->_xmlresponse)) {
+            if (is_siteadmin($USER->id)) {
+                notice(get_string('adminemptyxml', 'adobeconnect'),
+                       $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
             } else {
-                return false;
+                notice(get_string('emptyxml', 'adobeconnect'),
+                       '', $COURSE);
             }
-        } catch (Exception $e) {
+        }
+
+        $xml = new SimpleXMLElement($this->_xmlresponse);
+
+        if (0 == strcmp('ok', $xml->status[0]['code'])) {
+            return true;
+        } else {
             return false;
         }
     }

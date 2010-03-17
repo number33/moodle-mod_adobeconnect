@@ -2,6 +2,7 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/connect_class.php');
+require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id       = required_param('id', PARAM_INT); // course_module ID, or
 $groupid  = required_param('groupid', PARAM_INT);
@@ -87,7 +88,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
     $aconnect = aconnect_login();
 
     // Check if the meeting still exists on the Adobe server
-    $meetfldscoid = aconnect_get_meeting_folder($aconnect);
+    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
     $filter = array('filter-sco-id' => $meetingscoid);
     $meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
@@ -167,7 +168,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         $login = $USER->username;
         $password  = $USER->username;
 
-        $aconnect = new connect_class($CFG->adobeconnect_host, $CFG->adobeconnect_port);
+        $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
         $aconnect->request_http_header_login(1, $login);
 
         redirect('http://' . $CFG->adobeconnect_meethost . ':'
@@ -175,6 +176,6 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                  . '?session=' . $aconnect->get_cookie());
     }
 } else {
-    notice('Only members of this meeting are allowed to join this meeting');
+    notice('Only users enrolled and have a role in this course can join this meeting');
 }
 ?>

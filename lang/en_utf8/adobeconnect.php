@@ -64,8 +64,21 @@ $string['savechanges'] = 'Save';
 $string['selectparticipants'] = 'Assign roles';
 $string['starttime'] = 'Start time';
 $string['usergrouprequired'] = 'This Meeting requires users to be in a group in order to join';
+$string['testconnection'] = 'Test Connection';
+$string['connectiontesttitle'] = 'Connection test window';
+$string['conntestintro'] = '<p>A series of tests have been run in order to determine whether the Adobe Connect Pro server has been properly setup for this integration to work'.
+' and to also determine whether the user credentials provided in the activity global settings has the correct permissions to perform the neccessary tasks required by the'.
+' activity module.  If any of the tests below have failed, this activity module will not function properly.</p><p> For further assistance and documentation in how to set up your'.
+' Adobe Connect Pro server please consult the MoodleDocs help page for this activity module <a href=\"http://docs.moodle.org/en/Remote_learner_adobe_connect_pro\">Help page</a></p>';
 
 $string['adobeconnect:meetingpresenter'] = 'Meeting Presenter';
 $string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
 $string['adobeconnect:meetinghost'] = 'Meeting Host';
+
+// Error codes
+$string['emptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Please inform your Moodle administrator.';
+$string['adminemptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Click continue to proceed to the activity settings page and test the connection';
+$string['notsetupproperty'] = 'The activity module is not properly setup.  Please contact your Moodle administrator';
+$string['adminnotsetupproperty'] = 'The activity module is not properly setup.  Click continue to proceed to the activity settings page and test the connection';
+
 ?>

@@ -1,5 +1,6 @@
 <?php // $Id$
 require_once('connect_class.php');
+require_once('connect_class_dom.php');
 
 define('ADOBE_VIEW_ROLE', 'view');
 define('ADOBE_HOST_ROLE', 'host');
@@ -18,43 +19,315 @@ define('ADOBE_MEETPERM_PUBLIC', 0); //means the Acrobat Connect meeting is publi
 define('ADOBE_MEETPERM_PROTECTED', 1); //means the meeting is protected, and only registered users and accepted guests can enter the room.
 define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only registered users and participants can enter the room
 
-function aconnect_login() {
-    global $CFG;
+function adobe_connection_test($host = '', $port = '', $username = '', $password = '') {
 
-    try {
-        $aconnect = new connect_class($CFG->adobeconnect_host,
-                                      $CFG->adobeconnect_port,
-                                      $CFG->adobeconnect_admin_login,
-                                      $CFG->adobeconnect_admin_password);
+    if (empty($host) or
+        empty($port) or
+        empty($username) or
+        empty($password)) {
 
-        $params = array(
-            'action' => 'common-info'
-        );
-
-        $aconnect->create_request($params);
-
-        $aconnect->read_cookie_xml($aconnect->_xmlresponse);
-
-        $params = array(
-              'action' => 'login',
-              'login' => $aconnect->get_username(),
-              'password' => $aconnect->get_password(),
-        );
-
-        $aconnect->create_request($params);
-
-        if ($aconnect->call_success()) {
-            $aconnect->set_connection(1);
-        } else {
-            $aconnect->set_connection(0);
-        }
-
-        return $aconnect;
-
-    } catch (Exception $e) {
-        debugging("There was an error communicating with the Adobe Connect server. 22", DEBUG_DEVELOPER);
-        return false;
+        echo "</p>One of the required parameters is blank: <br />".
+             "Host: $host<br /> Port: $port<br /> Username: $username<br /> Password: $password</p>";
     }
+
+    $messages = array();
+
+    $aconnectDOM = new connect_class_dom($host,
+                                         $port,
+                                         $username,
+                                         $password);
+
+    $params = array(
+        'action' => 'common-info'
+    );
+
+    // Send common-info call to obtain the session key
+    echo '<p>Sending common-info call:</p>';
+    $aconnectDOM->create_request($params);
+
+    if (!empty($aconnectDOM->_xmlresponse)) {
+
+        // Get the session key from the XML response
+        $aconnectDOM->read_cookie_xml($aconnectDOM->_xmlresponse);
+
+        $cookie = $aconnectDOM->get_cookie();
+        if (empty($cookie)) {
+
+            echo '<p>unable to obtain session key from common-info call</p>';
+            echo '<p>xmlrequest:</p>';
+            $doc = new DOMDocument();
+
+            if ($doc->loadXML($aconnectDOM->_xmlrequest)) {
+                echo '<p>' . htmlspecialchars($doc->saveXML()) . '</p>';
+            } else {
+                echo '<p>unable to display the XML request</p>';
+            }
+
+            echo '<p>xmlresponse:</p>';
+            $doc = new DOMDocument();
+
+            if ($doc->loadXML($aconnectDOM->_xmlresponse)) {
+                echo '<p>' . htmlspecialchars($doc->saveHTML()) . '</p>';
+            } else {
+                echo '<p>unable to display the XML response</p>';
+            }
+
+        } else {
+
+            // print success
+            echo '<p style="color:#006633">successfully obtained the session key: ' . $aconnectDOM->get_cookie() . '</p>';
+
+            // test logging in as the administrator
+            $params = array(
+                  'action' => 'login',
+                  'login' => $aconnectDOM->get_username(),
+                  'password' => $aconnectDOM->get_password(),
+            );
+
+            $aconnectDOM->create_request($params);
+
+            if ($aconnectDOM->call_success()) {
+                echo '<p style="color:#006633">successfully logged in as ' . $username .'</p>';
+
+                //Test retrevial of folders
+                echo '<p>Testing retrevial of shared content, recording and meeting folders:</p>';
+                $folderscoid = aconnect_get_folder($aconnectDOM, 'content');
+
+                if ($folderscoid) {
+                    echo '<p style="color:#006633">successfully obtained shared content folder scoid: '. $folderscoid . '</p>';
+                } else {
+
+                    echo '<p>error obtaining shared content folder</p>';
+                    echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                    echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+
+                }
+
+                $folderscoid = aconnect_get_folder($aconnectDOM, 'forced-archives');
+
+                if ($folderscoid) {
+                    echo '<p style="color:#006633">successfully obtained forced-archives (meeting recordings) folder scoid: '. $folderscoid . '</p>';
+                } else {
+
+                    echo '<p>error obtaining forced-archives (meeting recordings) folder</p>';
+                    echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                    echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+
+                }
+
+                $folderscoid = aconnect_get_folder($aconnectDOM, 'meetings');
+
+                if ($folderscoid) {
+                    echo '<p style="color:#006633">successfully obtained meetings folder scoid: '. $folderscoid . '</p>';
+                } else {
+
+                    echo '<p>error obtaining meetings folder</p>';
+                    echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                    echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+
+                }
+
+                //Test creating a meeting
+                $folderscoid = aconnect_get_folder($aconnectDOM, 'meetings');
+                $meeting = new stdClass();
+                $meeting->name = 'testmeetingtest';
+                $time = time();
+                $meeting->starttime = $time;
+                $time = $time + (60 * 60);
+                $meeting->endtime = $time;
+
+                if (($meetingscoid = aconnect_create_meeting($aconnectDOM, $meeting, $folderscoid))) {
+                    echo '<p style="color:#006633">successfully created meeting <b>testmeetingtest</b> scoid: '. $meetingscoid . '</p>';
+                } else {
+
+                    echo '<p>error creating meeting <b>testmeetingtest</b> folder</p>';
+                    echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                    echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                }
+
+                //Test creating a user
+                $user = new stdClass();
+                $user->username = 'testusertest';
+                $user->firstname = 'testusertest';
+                $user->lastname = 'testusertest';
+                $user->email = 'testusertest@test.com';
+                $skipdeletetest = false;
+
+                if (!($usrprincipal = aconnect_user_exists($aconnectDOM, $user))) {
+                      $usrprincipal = aconnect_create_user($aconnectDOM, $user);
+                    if ($usrprincipal) {
+                        echo '<p style="color:#006633">successfully created user <b>testusertest</b> principal-id: '. $usrprincipal . '</p>';
+                    } else {
+                        echo '<p>error creating user  <b>testusertest</b></p>';
+                        echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                        echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                    }
+                } else {
+
+                    echo '<p>user <b>testusertest</b> already exists skipping delete user test</p>';
+                    $skipdeletetest = true;
+                }
+
+                //Test assigning a user a role to the meeting
+                if (aconnect_check_user_perm($aconnectDOM, $usrprincipal, $meetingscoid, ADOBE_PRESENTER, true)) {
+                    echo '<p style="color:#006633">successfully assigned user <b>testusertest</b>'.
+                         ' presenter role in meeting <b>testmeetingtest</b>: '. $usrprincipal . '</p>';
+                } else {
+                        echo '<p>error assigning user <b>testusertest</b> presenter role in meeting <b>testmeetingtest</b></p>';
+                        echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                        echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                }
+
+                //Test removing role from meeting
+                if (aconnect_check_user_perm($aconnectDOM, $usrprincipal, $meetingscoid, ADOBE_REMOVE_ROLE, true)) {
+                    echo '<p style="color:#006633">successfully removed presenter role for user <b>testusertest</b>'.
+                         ' in meeting <b>testmeetingtest</b>: '. $usrprincipal . '</p>';
+                } else {
+                        echo '<p>error remove presenter role for user <b>testusertest</b> in meeting <b>testmeetingtest</b></p>';
+                        echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                        echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                }
+
+                //Test removing user from server
+                if (!$skipdeletetest) {
+                    if (aconnect_delete_user($aconnectDOM, $usrprincipal)) {
+                        echo '<p style="color:#006633">successfully removed user <b>testusertest</b> principal-id: '. $usrprincipal . '</p>';
+                    } else {
+                        echo '<p>error removing user <b>testusertest</b></p>';
+                        echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                        echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                    }
+                }
+
+                //Test removing meeting from server
+                if ($meetingscoid) {
+                    if (aconnect_remove_meeting($aconnectDOM, $meetingscoid)) {
+                        echo '<p style="color:#006633">successfully removed meeting <b>testmeetingtest</b> scoid: '. $meetingscoid . '</p>';
+                    } else {
+                        echo '<p>error removing meeting <b>testmeetingtest</b> folder</p>';
+                        echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
+                        echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+                    }
+                }
+
+
+            } else {
+                echo '<p style="color:#680000">logging in as '. $username . ' was not successful, check to see if the username and password are correct </p>';
+            }
+
+       }
+
+    } else {
+        echo '<p style="color:#680000">common-info API call returned an empty document.  Please check your settings and try again </p>';
+    }
+
+    aconnect_logout($aconnectDOM);
+
+}
+
+/**
+ * Returns the folder sco-id
+ * @param object an adobe connection_class object
+ * @param string $folder name of the folder to get
+ * (ex. forced-archives = recording folder | meetings = meetings folder
+ * | content = shared content folder)
+ * @return mixed adobe connect folder sco-id || false if there was an error
+ *
+ */
+function aconnect_get_folder($aconnect, $folder = '') {
+    $folderscoid = false;
+    $params = array('action' => 'sco-shortcuts');
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+        $folderscoid = aconnect_get_folder_sco_id($aconnect->_xmlresponse, $folder);
+//        $params = array('action' => 'sco-contents', 'sco-id' => $folderscoid);
+    }
+
+    return $folderscoid;
+}
+
+/**
+ * TODO: comment function and return something meaningful
+ */
+function aconnect_get_folder_sco_id($xml, $folder) {
+    $scoid = false;
+
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
+
+    $domnodelist = $dom->getElementsByTagName('sco');
+
+    if (!empty($domnodelist->length)) {
+
+        for ($i = 0; $i < $domnodelist->length; $i++) {
+
+            $domnode = $domnodelist->item($i)->attributes->getNamedItem('type');
+
+            if (!is_null($domnode)) {
+
+                if (0 == strcmp($folder, $domnode->nodeValue)) {
+                    $domnode = $domnodelist->item($i)->attributes->getNamedItem('sco-id');
+
+                    if (!is_null($domnode)) {
+                        $scoid = (int) $domnode->nodeValue;
+
+                    }
+                }
+            }
+        }
+    }
+
+    return $scoid;
+
+}
+
+
+function aconnect_login() {
+    global $CFG, $USER, $COURSE;
+
+    if (!isset($CFG->adobeconnect_host) or
+        !isset($CFG->adobeconnect_port) or
+        !isset($CFG->adobeconnect_admin_login) or
+        !isset($CFG->adobeconnect_admin_password)) {
+            if (is_siteadmin($USER->id)) {
+                notice(get_string('adminnotsetupproperty', 'adobeconnect'),
+                       $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
+            } else {
+                notice(get_string('notsetupproperty', 'adobeconnect'),
+                       '', $COURSE);
+            }
+    }
+
+    $aconnect = new connect_class_dom($CFG->adobeconnect_host,
+                                  $CFG->adobeconnect_port,
+                                  $CFG->adobeconnect_admin_login,
+                                  $CFG->adobeconnect_admin_password);
+
+    $params = array(
+        'action' => 'common-info'
+    );
+
+    $aconnect->create_request($params);
+
+    $aconnect->read_cookie_xml($aconnect->_xmlresponse);
+
+    $params = array(
+          'action' => 'login',
+          'login' => $aconnect->get_username(),
+          'password' => $aconnect->get_password(),
+    );
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+        $aconnect->set_connection(1);
+    } else {
+        $aconnect->set_connection(0);
+    }
+
+    return $aconnect;
 }
 
 
@@ -80,24 +353,6 @@ function aconnect_logout(&$aconnect) {
     }
 }
 
-function aconnect_get_meetings($xml) {
-    $scoid = false;
-    $xml = new SimpleXMLElement($xml);
-
-    if (empty($xml)) {
-        return $scoid;
-    }
-
-    foreach($xml->shortcuts[0]->sco as $key => $sco) {
-        if (0 == strcmp('meetings', $sco['type'])) {
-            $scoid = (int) $sco['sco-id'];
-            break;
-        }
-    }
-
-    return $scoid;
-}
-
 /**
  * Calls all operations needed to retrieve and return all
  * templates defined in the shared templates folder and meetings
@@ -119,7 +374,6 @@ function aconnect_get_templates_meetings($aconnect) {
     if ($aconnect->call_success()) {
         // Get shared templates folder sco-id
         $tempfldscoid = aconnect_get_shared_templates($aconnect->_xmlresponse);
-//        $meetfldscoid = aconnect_get_meetings($aconnect->_xmlresponse);
     }
 
     if (false !== $tempfldscoid) {
@@ -135,20 +389,20 @@ function aconnect_get_templates_meetings($aconnect) {
         }
     }
 
-    if (false !== $meetfldscoid) {
-        $params = array(
-            'action' => 'sco-expanded-contents',
-            'sco-id' => $meetfldscoid,
-            'filter-type' => 'meeting',
-        );
-
-        $aconnect->create_request($params);
-
-        if ($aconnect->call_success()) {
-            $meetings = aconnect_return_all_meetings($aconnect->_xmlresponse);
-        }
-
-    }
+//    if (false !== $meetfldscoid) {
+//        $params = array(
+//            'action' => 'sco-expanded-contents',
+//            'sco-id' => $meetfldscoid,
+//            'filter-type' => 'meeting',
+//        );
+//
+//        $aconnect->create_request($params);
+//
+//        if ($aconnect->call_success()) {
+//            $meetings = aconnect_return_all_meetings($aconnect->_xmlresponse);
+//        }
+//
+//    }
 
     return $templates + $meetings;
 }
@@ -161,17 +415,41 @@ function aconnect_get_templates_meetings($aconnect) {
  */
 function aconnect_get_shared_templates($xml) {
     $scoid = false;
-    $xml = new SimpleXMLElement($xml);
 
-    if (empty($xml)) {
-        return $scoid;
-    }
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
 
-    foreach($xml->shortcuts[0]->sco as $key => $sco) {
-        if (0 == strcmp('shared-meeting-templates', $sco['type'])) {
-            $scoid = $sco['sco-id'];
-            break;
-        }
+    $domnodelist = $dom->getElementsByTagName('shortcuts');
+
+    if (!empty($domnodelist->length)) {
+
+//        for ($i = 0; $i < $domnodelist->length; $i++) {
+
+            $innerlist = $domnodelist->item(0)->getElementsByTagName('sco');
+
+            if (!empty($innerlist->length)) {
+
+                for ($x = 0; $x < $innerlist->length; $x++) {
+
+                    if ($innerlist->item($x)->hasAttributes()) {
+
+                        $domnode = $innerlist->item($x)->attributes->getNamedItem('type');
+
+                        if (!is_null($domnode)) {
+
+                            if (0 == strcmp('shared-meeting-templates', $domnode->nodeValue)) {
+                                $domnode = $innerlist->item($x)->attributes->getNamedItem('sco-id');
+
+                                if (!is_null($domnode)) {
+                                    $scoid = (int) $domnode->nodeValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+//        }
+
     }
 
     return $scoid;
@@ -203,62 +481,42 @@ function aconnect_return_all_meetings($xml) {
  */
 function aconnect_return_all_templates($xml) {
     $templates = array();
-    $xml = new SimpleXMLElement($xml);
 
-    if (empty($xml)) {
-        return $templates;
-    }
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
 
-    foreach($xml->{'expanded-scos'}[0]->sco as $key => $sco) {
-        if (0 == strcmp('meeting', $sco['type'])) {
-            $tkey = (int) $sco['sco-id'];
-            $templates[$tkey] = (string) current($sco->name) .' ' . ADOBE_TEMPLATE_POSTFIX;
+    $domnodelist = $dom->getElementsByTagName('expanded-scos');
+
+    if (!empty($domnodelist->length)) {
+
+        $innerlist = $domnodelist->item(0)->getElementsByTagName('sco');
+
+        if (!empty($innerlist->length)) {
+
+            for ($i = 0; $i < $innerlist->length; $i++) {
+
+                if ($innerlist->item($i)->hasAttributes()) {
+                    $domnode = $innerlist->item($i)->attributes->getNamedItem('type');
+
+                    if (!is_null($domnode) and 0 == strcmp('meeting', $domnode->nodeValue)) {
+                        $domnode = $innerlist->item($i)->attributes->getNamedItem('sco-id');
+
+                        if (!is_null($domnode)) {
+                            $tkey = (int) $domnode->nodeValue;
+                            $namelistnode = $innerlist->item($i)->getElementsByTagName('name');
+
+                            if (!is_null($namelistnode)) {
+                                $name = $namelistnode->item(0)->nodeValue;
+                                $templates[$tkey] = (string) $name .' ' . ADOBE_TEMPLATE_POSTFIX;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
     return $templates;
-}
-
-/**
- * Returns the Meeting folder sco-id
- * @param object an adobe connection_class object
- * @return mixed adobe connect meeting folder sco-id || false if there was an error
- */
-function aconnect_get_meeting_folder($aconnect) {
-    $folderscoid = false;
-    $params = array('action' => 'sco-shortcuts');
-
-    $aconnect->create_request($params);
-
-    if ($aconnect->call_success()) {
-        $folderscoid = aconnect_get_meeting_folder_sco_id($aconnect->_xmlresponse);
-//        $params = array('action' => 'sco-contents', 'sco-id' => $folderscoid);
-    }
-
-    return $folderscoid;
-}
-
-/**
- * Returns the meeting folder sco-id
- * @param string $xml
- * @return int sco-id of the meeting folder
- */
-function aconnect_get_meeting_folder_sco_id($xml) {
-    $scoid = false;
-    $xml = new SimpleXMLElement($xml);
-
-    if (empty($xml)) {
-        return $scoid;
-    }
-
-    foreach($xml->shortcuts[0]->sco as $key => $sco) {
-        if (0 == strcmp('meetings', $sco['type'])) {
-            $scoid = (int) $sco['sco-id'];
-            break;
-        }
-    }
-
-    return $scoid;
 }
 
 /**
@@ -284,18 +542,70 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
     $recordings = array();
 
     if ($aconnect->call_success()) {
-        $xml = new SimpleXMLElement($aconnect->_xmlresponse);
-        if (isset($xml->scos->sco)) {
-            foreach ($xml->scos->sco as $data) {
-                $i = (int) $data['sco-id'];
-                $recordings[$i]->name = (string) $data->name;
-                $recordings[$i]->url = (string) $data->{'url-path'};
-                $recordings[$i]->startdate = (string) $data->{'date-begin'};
-                $recordings[$i]->enddate = (string) $data->{'date-end'};
-                $recordings[$i]->createdate = (string) $data->{'date-created'};
-                $recordings[$i]->modified = (string) $data->{'date-modified'};
-                $recordings[$i]->duration = (string) $data->duration;
-            }
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
+
+        $domnodelist = $dom->getElementsByTagName('scos');
+
+        if (!empty($domnodelist->length)) {
+
+//            for ($i = 0; $i < $domnodelist->length; $i++) {
+
+                $innernodelist = $domnodelist->item(0)->getElementsByTagName('sco');
+
+                if (!empty($innernodelist->length)) {
+
+                    for ($x = 0; $x < $innernodelist->length; $x++) {
+
+                        if ($innernodelist->item($x)->hasAttributes()) {
+
+                            $domnode = $innernodelist->item($x)->attributes->getNamedItem('sco-id');
+
+                            if (!is_null($domnode)) {
+                                $meetingdetail = $innernodelist->item($x);
+
+                                $j = (int) $domnode->nodeValue;
+                                $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
+                                         $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->name = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
+                                         $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->url = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
+                                         $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->startdate = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
+                                         $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->enddate = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
+                                         $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->createdate = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
+                                         $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->modified = (string) $value;
+
+                                $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
+                                         $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
+
+                                $recordings[$j]->duration = (string) $value;
+
+                            }
+                        }
+                    }
+                }
+//            }
+
             return $recordings;
         } else {
             return false;
@@ -307,62 +617,28 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
 }
 
 /**
- * Returns the forced archive folder sco-id
- * @param object an adobe connection_class object
- * @param string $folder name of the folder to get
- * (ex. forced-archives = recording folder | meetings = meetings folder
- * | content = shared content folder)
- * @return mixed adobe connect folder sco-id || false if there was an error
- *
- */
-function aconnect_get_folder($aconnect, $folder = '') {
-    $folderscoid = false;
-    $params = array('action' => 'sco-shortcuts');
-
-    $aconnect->create_request($params);
-
-    if ($aconnect->call_success()) {
-        $folderscoid = aconnect_get_folder_sco_id($aconnect->_xmlresponse, $folder);
-//        $params = array('action' => 'sco-contents', 'sco-id' => $folderscoid);
-    }
-
-    return $folderscoid;
-}
-
-/**
- * TODO: comment function and return something meaningful
- */
-function aconnect_get_folder_sco_id($xml, $folder) {
-    $scoid = false;
-    $xml = new SimpleXMLElement($xml);
-
-    if (empty($xml)) {
-        return $scoid;
-    }
-
-    foreach($xml->shortcuts[0]->sco as $key => $sco) {
-        if (0 == strcmp($folder, $sco['type'])) {
-            $scoid = (int) $sco['sco-id'];
-            break;
-        }
-    }
-
-    return $scoid;
-}
-
-/**
  * Parses XML and returns the meeting sco-id
  * @param string XML obtained from a sco-update call
  */
 function aconnect_get_meeting_scoid($xml) {
-    $xml = new SimpleXMLElement($xml);
+    $scoid = false;
 
-    if (empty($xml)) {
-        echo ' | aconnect_get_meeting_scoid xml empty ';
-        return false;
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
+
+    $domnodelist = $dom->getElementsByTagName('sco');
+
+    if (!empty($domnodelist->length)) {
+        if ($domnodelist->item(0)->hasAttributes()) {
+            $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
+
+            if (!is_null($domnode)) {
+                $scoid = (int) $domnode->nodeValue;
+            }
+        }
     }
 
-    return (int) $xml->sco['sco-id'];
+    return $scoid;
 }
 
 /**
@@ -466,25 +742,6 @@ function aconnect_create_meeting($aconnect, $meetingobj, $meetingfdl) {
 }
 
 /**
- * Parses XML looking for a matching meeting sco-id
- * @param string $xml returned XML from a sco-expanded-contents call
- * @return true of meeting sco-id is found otherwise false
- */
-function aconnect_meeting_scoid_exists($xml) {
-    $xml = new SimpleXMLElement($xml);
-
-    if (empty($xml)) {
-        return false;
-    }
-
-    if (isset($xml->{'expanded-scos'}[0]->sco[0])) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
  * Finds a matching meeting sco-id
  * @param object $aconnect a connect_class object
  * @param int $meetfldscoid Meeting folder sco-id
@@ -510,22 +767,56 @@ function aconnect_meeting_exists($aconnect, $meetfldscoid, $filter = array()) {
     $aconnect->create_request($params);
 
     if ($aconnect->call_success()) {
-        $xml = new SimpleXMLElement($aconnect->_xmlresponse);
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
 
-        if (empty($xml)) {
-            return false;
-        }
+        $domnodelist = $dom->getElementsByTagName('scos');
 
-        if (isset($xml->scos[0]->sco[0])) {
-            foreach ($xml->scos[0]->sco as $data) {
-                $key = (int) $data['sco-id'];
-                $matches[$key]->name = (string) $data->name;
-                $matches[$key]->url = (string) $data->{'url-path'};
-                $matches[$key]->scoid = (int) $data['sco-id'];
-                $matches[$key]->starttime = (string) $data->{'date-begin'};
-                $matches[$key]->endtime = (string) $data->{'date-end'};
+        if (!empty($domnodelist->length)) {
+
+            $innernodelist = $domnodelist->item(0)->getElementsByTagName('sco');
+
+            if (!empty($innernodelist->length)) {
+
+                for ($i = 0; $i < $innernodelist->length; $i++) {
+
+                    if ($innernodelist->item($i)->hasAttributes()) {
+
+                        $domnode = $innernodelist->item($i)->attributes->getNamedItem('sco-id');
+
+                        if (!is_null($domnode)) {
+
+                            $key = (int) $domnode->nodeValue;
+
+                            $meetingdetail = $innernodelist->item($i);
+
+                            $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
+                                     $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
+
+                            $matches[$key]->name = (string) $value;
+
+                            $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
+                                     $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
+
+                            $matches[$key]->url = (string) $value;
+
+                            $matches[$key]->scoid = (int) $key;
+
+                            $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
+                                     $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
+
+                            $matches[$key]->starttime = (string) $value;
+
+                            $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
+                                     $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
+
+                            $matches[$key]->endtime = (string) $value;
+
+                        }
+
+                    }
+                }
             }
-
         } else {
             return false;
         }
@@ -543,17 +834,28 @@ function aconnect_meeting_exists($aconnect, $meetfldscoid, $filter = array()) {
  * @param mixed user's principal-id or false
  */
 function aconnect_get_user_principal_id($xml) {
-    $xml = new SimpleXMLElement($xml);
+    $usrprincipalid = false;
 
-    if (empty($xml)) {
-        return false;
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
+
+    $domnodelist = $dom->getElementsByTagName('principal-list');
+
+    if (!empty($domnodelist->length)) {
+        $domnodelist = $domnodelist->item(0)->getElementsByTagName('principal');
+
+        if (!empty($domnodelist->length)) {
+            if ($domnodelist->item(0)->hasAttributes()) {
+                $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
+
+                if (!is_null($domnode)) {
+                    $usrprincipalid = (int) $domnode->nodeValue;
+                }
+            }
+        }
     }
 
-    if (isset($xml->{'principal-list'}[0]->principal['principal-id'])) {
-        return $xml->{'principal-list'}[0]->principal['principal-id'];
-    } else {
-        return false;
-    }
+    return $usrprincipalid;
 }
 
 /**
@@ -583,6 +885,27 @@ function aconnect_user_exists($aconnect, $usrdata) {
 
 }
 
+function aconnect_delete_user($aconnect, $principalid = 0) {
+
+    if (empty($principalid)) {
+        return false;
+    }
+
+    $params = array(
+        'action' => 'principals-delete',
+        'principal-id' => $principalid,
+    );
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
 /**
  * Creates a new user on the Adobe Connect server.
  * Parses XML from a principal-update call and returns
@@ -601,7 +924,7 @@ function aconnect_create_user($aconnect, $usrdata) {
         'first-name' => $usrdata->firstname,
         'last-name' => $usrdata->lastname,
         'login' => $usrdata->username,
-        'password' => $usrdata->username,
+        'password' => md5($usrdata->username . time()),
         'extlogin' => $usrdata->username,
         'type' => 'user',
         'send-email' => 'false',
@@ -612,18 +935,23 @@ function aconnect_create_user($aconnect, $usrdata) {
     $aconnect->create_request($params);
 
     if ($aconnect->call_success()) {
-        $xml = new SimpleXMLElement($aconnect->_xmlresponse);
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
 
-        if (empty($xml)) {
-            return false;
-        }
+        $domnodelist = $dom->getElementsByTagName('principal');
 
-        if (isset($xml->principal[0])) {
-            $principal_id = $xml->principal[0]['principal-id'];
+        if (!empty($domnodelist->length)) {
+            if ($domnodelist->item(0)->hasAttributes()) {
+                $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
+
+                if (!is_null($domnode)) {
+                    $principal_id = (int) $domnode->nodeValue;
+                }
+            }
         }
     }
 
-      return $principal_id;
+    return $principal_id;
 }
 
 function aconnect_assign_user_perm($aconnect, $usrprincipal, $meetingscoid, $type) {
@@ -712,14 +1040,17 @@ function aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, $role
     $aconnect->create_request($params);
 
     if ($aconnect->call_success()) {
-        $xml = new SimpleXMLElement($aconnect->_xmlresponse);
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
 
-        if (empty($xml)) {
-            return $hasperm;
-        }
+        $domnodelist = $dom->getElementsByTagName('permissions');
 
-        if (isset($xml->permissions[0]->principal)) {
-            $hasperm = true;
+        if (!empty($domnodelist->length)) {
+            $domnodelist = $domnodelist->item(0)->getElementsByTagName('principal');
+
+            if (!empty($domnodelist->length)) {
+                $hasperm = true;
+            }
         }
 
         if (ADOBE_REMOVE_ROLE != $perm_type and $assign and !$hasperm) {
@@ -786,269 +1117,74 @@ function aconnect_move_to_shared($aconnect, $scolist) {
     }
 }
 
-function aconnect_is_meeting($aconnect, $itemscoid, $meetfldscoid) {
-    $params = array(
-        'action' => 'sco-contents',
-        'sco-id' => $meetfldscoid,
-        'filter-type' => 'meeting',
-        'filter-sco-id' => $itemscoid,
-    );
 
-    $aconnect->create_request($params);
-
-    if ($aconnect->call_success()) {
-        $xml = new SimpleXMLElement($aconnect->_xmlresponse);
-
-        if (empty($xml)) {
-            return false;
-        }
-
-        if (isset($xml->scos[0]->sco[0])) {
-            return $itemscoid;
-        } else {
-            return false;
-        }
-    }
-}
-
-/**
- * Assign a role for a list of users
- * @param obj $aconnect a connect_class object
- * @param array an array of user principal ids
- * the user's role is the array key and the user principal id is the value
- * @param int $scoid the sco-id of the content
- *
- */
-function assign_roles_to_users($aconnect, $usrlist = array(), $scoid = 0, $roleid = 0) {
-    foreach ($usrlist as $usrprincipal) {
-        aconnect_check_user_perm($aconnect, $usrprincipal, $scoid, $roleid, true);
-    }
-}
-
-function save_user_roles($aconnect, $userlist) {
-    global $CFG;
-
-    // look for existing meeting
-    $instanceid = key($userlist);
-    $groupid = key($userlist[$instanceid]);
-    $match = false;
-    $scotype = false;
-
-    $meeting = get_record('adobeconnect', 'id', $instanceid, '', '', '', '', 'id,name,templatescoid,meeturl,starttime,endtime');
-
-    $sql = "SELECT id, meetingscoid FROM {$CFG->prefix}adobeconnect_meeting_groups WHERE instanceid = $instanceid".
-           " AND groupid = $groupid";
-
-    $grpmeetscoid = get_record_sql($sql);
-
-    // Get group name
-    $group = groups_get_group($groupid);
-
-    if (empty($group)) {
-        $group = new stdClass;
-        $group->name = '_';
-    }
-
-    if (empty($meeting)) {
-        return false;
-    }
-
-    $meetfldscoid = aconnect_get_meeting_folder($aconnect);
-
-
-    if (empty($grpmeetscoid) or !($scotype = aconnect_is_meeting($aconnect, $grpmeetscoid->meetingscoid, $meetfldscoid))) {
-        // Create meeting
-        $meeting->name .= '_'. $group->name;
-        $meeting->meeturl .= '_' . $group->name;
-
-        // Check if the activity is linked to an existing meeting or template
-        // if linked to an existing meeting we do not want to create a new meeting
-        // if linked to a template, we need to create a meeting from that template
-
-        $meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid);
-
-        if (empty($meetingscoid)) {
-//            print_object($aconnect->_xmlresponse);
-//            print_object($aconnect->_xmlrequest);
-            return;
-        } else {
-            // DO NOTHING, adobeconnect_group_meetings insertion is handled later on
-        }
-
-        // TODO check for return value
-        aconnect_update_meeting_perm($aconnect, $meetingscoid, ADOBE_MEETPERM_PRIVATE);
-
-        // insert record
-        $record = new stdClass;
-        $record->instanceid = $instanceid;
-        $record->meetingscoid = $meetingscoid;
-        $record->groupid = $groupid;
-
-        $record->id = insert_record('adobeconnect_meeting_groups', $record);
-
-    } else {
-
-        $meetingscoid = $scotype;
-        $record = new stdClass;
-        $record->id = $grpmeetscoid->id;
-        $record->instanceid = $instanceid;
-        $record->meetingscoid = $meetingscoid;
-        $record->groupid = $groupid;
-
-    }
-
-    // Check to see if a user exists
-    $users = current(current($userlist));
-
-    foreach ($users as $roleid => $usr) {
-        if (ADOBE_REMOVE == $roleid) { // list of users who were removed from either participants list
-
-            foreach($usr as $userid => $usrdata) {
-                // See if the user exists, remove permission from meeting
-                if (($usrprincipal = aconnect_user_exists($aconnect, $usrdata))) {
-                    // Remove user's role for the meeting
-                    aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, $roleid);
-
-                    $sql = "SELECT amu.id FROM {$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-                           "{$CFG->prefix}adobeconnect_meeting_groups amg ON amg.id = amu.meetgroupid ".
-                           "WHERE amg.groupid = $groupid AND amg.instanceid = $instanceid AND ".
-                           "amu.userid = {$usrdata->id}";
-                    $id = get_record_sql($sql);
-
-                    if (!empty($id)) {
-                        delete_records('adobeconnect_meeting_users', 'id', $id->id);
-                    }
-                }
-
-                // Check if user is participant/presenter in any of the activity instance's meetings
-                // if not then we must remove their view permission on the recordings shared folder in Adobe
-                $sql = "SELECT amu.id FROM {$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-                       "{$CFG->prefix}adobeconnect_meeting_groups amg ON amg.id = amu.meetgroupid ".
-                       "WHERE amg.instanceid = $instanceid AND amu.userid = {$usrdata->id}";
-
-                if (!record_exists_sql($sql)) {
-                    // Remove view permission
-                    $fldid = aconnect_get_folder($aconnect, 'content');
-                    aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_REMOVE_ROLE);
-                }
-            }
-        } else { // list of users who were added to either participants list
-            foreach($usr as $userid => $usrdata) {
-                if (($usrprincipal = aconnect_user_exists($aconnect, $usrdata))) {
-                    //User exists
-
-                    // Check the permissions the user has for this meeting
-                    aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, $roleid, true);
-
-                } else {
-                    // Create user
-                    if (($usrprincipal = aconnect_create_user($aconnect, $usrdata))) {
-                        // Assign the user's role for the meeting
-
-                        // Check the permissions the user has for this meeting
-                        aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, $roleid, true);
-                    }
-                }
-
-                // Insesrt meeting record for user
-                if (!empty($usrprincipal)) {
-                    $amurec = new stdClass();
-                    $amurec->roleid = $usrdata->roleid;
-                    $amurec->userprincipalid = $usrprincipal;
-                    $amurec->userid = $usrdata->userid;
-                    $amurec->meetgroupid = $record->id; // $record->id is set above with the adobeconnect_meeting_groups id
-
-                    // Check if this user has a record in Adobe Moodle table
-                    $sql = "SELECT amu.id FROM {$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-                           "{$CFG->prefix}adobeconnect_meeting_groups amg ON amg.id = amu.meetgroupid ".
-                           " WHERE amg.instanceid = $instanceid AND amg.groupid = $groupid AND ".
-                           "amu.userid = {$amurec->userid}";
-                    $id = get_field_sql($sql);
-
-                    if (empty($id)) {
-                        insert_record('adobeconnect_meeting_users', $amurec);
-                    } else {
-                        $amurec->id = $id;
-                        update_record('adobeconnect_meeting_users', $amurec);
-                    }
-
-                    // Add view permission
-                    $fldid = aconnect_get_folder($aconnect, 'content');
-                    aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE);
-
-                }
-            }
-        }
-    }
-}
-
-function get_nonparticipant_users($instanceid, $courseid, $groupid = 0) {
-    global $CFG;
-
-    $context = get_context_instance(CONTEXT_COURSE, $courseid);
-    $roles = get_roles_with_capability('moodle/legacy:student', CAP_ALLOW, $context);
-    $users = array();
-
-    if (empty($roles)) {
-        return array();
-    }
-
-    $role = current($roles);
-
-    if ($groupid) {
-      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC', true, $groupid);
-    } else { // GET USER
-      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC');
-    }
-
-    if (empty($users) ) {
-        $users = array();
-    }
-
-    $sql = "SELECT amu.userid, amu.roleid FROM ".
-           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-           "{$CFG->prefix}adobeconnect_meeting_groups amg ".
-           "ON amu.meetgroupid = amg.id WHERE ".
-           " amg.instanceid = $instanceid AND amg.groupid = $groupid";
-
-    $participants = get_records_sql($sql);
-
-    if (empty($participants)) {
-        $participants = array();
-    }
-
-    foreach($users as $key => $user) {
-        foreach($participants as $participant) {
-            if ($user->id == $participant->userid) {
-                unset($users[$key]);
-            }
-        }
-    }
-
-    return $users;
-}
-
-function get_participant_users($instanceid, $groupid) {
-    global $CFG;
-
-    $participants = array();
-
-
-    $sql = "SELECT amu.userid, amu.roleid, u.firstname, u.lastname, u.username, u.email FROM ".
-           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-           "{$CFG->prefix}user u ON u.id = amu.userid JOIN ".
-           "{$CFG->prefix}adobeconnect_meeting_groups amg ON ".
-           " amg.id = amu.meetgroupid WHERE ".
-           " amg.instanceid = $instanceid AND amg.groupid = $groupid".
-           " AND u.deleted = 0 ORDER BY u.lastname ASC";
-
-
-    $participants = get_records_sql($sql);
-
-    if (empty($participants)) {
-        $participants = array();
-    }
-
-    return $participants;
-}
+//function get_nonparticipant_users($instanceid, $courseid, $groupid = 0) {
+//    global $CFG;
+//
+//    $context = get_context_instance(CONTEXT_COURSE, $courseid);
+//    $roles = get_roles_with_capability('moodle/legacy:student', CAP_ALLOW, $context);
+//    $users = array();
+//
+//    if (empty($roles)) {
+//        return array();
+//    }
+//
+//    $role = current($roles);
+//
+//    if ($groupid) {
+//      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC', true, $groupid);
+//    } else { // GET USER
+//      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC');
+//    }
+//
+//    if (empty($users) ) {
+//        $users = array();
+//    }
+//
+//    $sql = "SELECT amu.userid, amu.roleid FROM ".
+//           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
+//           "{$CFG->prefix}adobeconnect_meeting_groups amg ".
+//           "ON amu.meetgroupid = amg.id WHERE ".
+//           " amg.instanceid = $instanceid AND amg.groupid = $groupid";
+//
+//    $participants = get_records_sql($sql);
+//
+//    if (empty($participants)) {
+//        $participants = array();
+//    }
+//
+//    foreach($users as $key => $user) {
+//        foreach($participants as $participant) {
+//            if ($user->id == $participant->userid) {
+//                unset($users[$key]);
+//            }
+//        }
+//    }
+//
+//    return $users;
+//}
+//
+//function get_participant_users($instanceid, $groupid) {
+//    global $CFG;
+//
+//    $participants = array();
+//
+//
+//    $sql = "SELECT amu.userid, amu.roleid, u.firstname, u.lastname, u.username, u.email FROM ".
+//           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
+//           "{$CFG->prefix}user u ON u.id = amu.userid JOIN ".
+//           "{$CFG->prefix}adobeconnect_meeting_groups amg ON ".
+//           " amg.id = amu.meetgroupid WHERE ".
+//           " amg.instanceid = $instanceid AND amg.groupid = $groupid".
+//           " AND u.deleted = 0 ORDER BY u.lastname ASC";
+//
+//
+//    $participants = get_records_sql($sql);
+//
+//    if (empty($participants)) {
+//        $participants = array();
+//    }
+//
+//    return $participants;
+//}
 ?>

@@ -41,7 +41,7 @@ class meeting_detail_form extends moodleform {
         $aconnect = aconnect_login();
 
         // Get the Meeting details
-        $meetfldscoid = aconnect_get_meeting_folder($aconnect);
+        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
         $filter = array('filter-sco-id' => $scoid);
         $meeting = current(aconnect_meeting_exists($aconnect, $meetfldscoid, $filter));
 
