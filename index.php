@@ -3,7 +3,7 @@
 /**
  * This page lists all the instances of adobeconnect in a particular course
  *
- * @author  Your Name <your@email.address>
+ * @author  Your Name Akinsaya Delamarre
  * @version $Id$
  * @package mod/adobeconnect
  */
