@@ -3,7 +3,7 @@
 /**
  * This page lists all the instances of adobeconnect in a particular course
  *
- * @author  Your Name <your@email.address>
+ * @author  Your Name Akinsaya Delamarre (adelamarre@remote-learner.net)
  * @version $Id$
  * @package mod/adobeconnect
  */
@@ -75,7 +75,7 @@ if (array_key_exists(0, $groups)) {
 
 foreach ($adobeconnects as $adobeconnect) {
     $group = $groupid;
-    
+
     if (0 == $adobeconnect->groupmode) {
         $group = '&amp;group=0';
     }
