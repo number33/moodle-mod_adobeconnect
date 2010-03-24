@@ -72,6 +72,8 @@ $string['conntestintro'] = '<p>A series of tests have been run in order to deter
 ' and to also determine whether the user credentials provided in the activity global settings has the correct permissions to perform the neccessary tasks required by the'.
 ' activity module.  If any of the tests below have failed, this activity module will not function properly.</p><p> For further assistance and documentation in how to set up your'.
 ' Adobe Connect Pro server please consult the MoodleDocs help page for this activity module <a href=\"http://docs.moodle.org/en/Remote_learner_adobe_connect_pro\">Help page</a></p>';
+$string['greaterstarttime'] = 'The start time cannot be greater than the end time';
+$string['invalidadobemeeturl'] = 'Invalid entry for this field.  Click the help bubble for valid entries';
 
 $string['adobeconnect:meetingpresenter'] = 'Meeting Presenter';
 $string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
