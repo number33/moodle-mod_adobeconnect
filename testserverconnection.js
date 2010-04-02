@@ -14,5 +14,11 @@ function adobetestConnection(obj) {
     queryString += "&authPassword=" + escape(obj.id_s__adobeconnect_admin_password.value);
     queryString += "&authHTTPheader=" + escape(obj.id_s__adobeconnect_admin_httpauth.value);
     
+    if (obj.id_s__adobeconnect_email_login.checked) {
+        queryString += "&authEmaillogin=1";
+    } else {
+        queryString += "&authEmaillogin=0";
+    }
+    
     return openpopup('/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest', 'scrollbars=yes,resizable=no,width=640,height=300');
 }

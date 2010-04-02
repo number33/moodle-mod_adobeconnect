@@ -24,12 +24,20 @@ require_login($course, true, $cm);
 
 global $CFG, $USER;
 
+// Check if the user's email is the Connect Pro user's login
+$usrobj = new stdClass();
+$usrobj = clone($USER);
+
+if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+    $usrobj->username = $usrobj->email;
+}
+
 add_to_log($course->id, "adobeconnect", "view", "join.php?id=$cm->id&groupid=$groupid&sesskey=$sesskey", "$adobeconnect->id");
 
 if (0 != $cm->groupmode){
 
     if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $USER->id);
+        $groups = groups_get_user_groups($course->id, $usrobj->id);
 
         if (array_key_exists(0, $groups)) {
             $groupid = current($groups[0]);
@@ -49,7 +57,7 @@ if (0 != $cm->groupmode){
 
 $usrcanjoin = false;
 
-$usrgroups = groups_get_user_groups($cm->course, $USER->id);
+$usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
 $usrgroups = $usrgroups[0]; // Just want groups and not groupings
 
 // If separate groups is enabled, check if the user is a part of the selected group
@@ -69,7 +77,7 @@ if (empty($crsroles)) {
 }
 
 foreach ($crsroles as $roleid => $crsrole) {
-    if (user_has_role_assignment($USER->id, $roleid, $context->id)) {
+    if (user_has_role_assignment($usrobj->id, $roleid, $context->id)) {
         $usrcanjoin = true;
     }
 }
@@ -96,8 +104,8 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         $meeting = current($meeting);
     }
 
-    if (!($usrprincipal = aconnect_user_exists($aconnect, $USER))) {
-        if (!($usrprincipal = aconnect_create_user($aconnect, $USER))) {
+    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
+        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
             // DEBUG
             print_object("error creating user");
             print_object($aconnect->_xmlresponse);
@@ -109,7 +117,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     // Check the user's capabilities and assign them the Adobe Role
     if (!empty($meetingscoid) and !empty($usrprincipal) and !empty($meeting)) {
-        if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id)) {
+        if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id)) {
             if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PRESENTER, true)) {
                 //DEBUG
                 // echo 'true';
@@ -120,7 +128,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
             }
-        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $USER->id)) {
+        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
             if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PARTICIPANT, true)) {
                 //DEBUG
                 // echo 'true';
@@ -131,7 +139,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
             }
-        } elseif (has_capability('mod/adobeconnect:meetinghost', $context, $USER->id)) {
+        } elseif (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id)) {
             if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_HOST, true)) {
                 //DEBUG
                 // echo 'true';

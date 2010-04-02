@@ -28,6 +28,9 @@ $string['cancelchanges'] = 'Cancel';
 $string['duplicatemeetingname'] = 'A duplicate meeting name was found on the server';
 $string['duplicateurl'] = 'A duplicate meeting URL was found on the server';
 $string['editingfor'] = 'Editing for: $a';
+$string['email_login'] = 'Email address login';
+$string['email_login_desc'] = 'Check this option only if your Connect Pro server login is set to use email address. Note that toggling '.
+                              'this option on/off during regular usage of this activity module can potentially create duplicaed users on the Connect Pro server';
 $string['endtime'] = 'End time';
 $string['existingusers'] = '$a existing users';
 $string['groupswitch'] = 'Filter by group';
