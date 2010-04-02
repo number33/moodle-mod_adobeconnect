@@ -20,6 +20,10 @@ $settings->add(new admin_setting_configpasswordunmask('adobeconnect_admin_passwo
 $settings->add(new admin_setting_configtext('adobeconnect_admin_httpauth', get_string('admin_httpauth', 'adobeconnect'),
                    get_string('admin_httpauth_desc', 'adobeconnect'), 'rl-user-id', PARAM_TEXT));
 
+$settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
+                   get_string('email_login_desc', 'adobeconnect'), '0'));
+
+
 //$settings->add(new admin_setting_configcheckbox('adobeconnect_record_force', get_string('record_force', 'adobeconnect'),
 //                   get_string('record_force_desc', 'adobeconnect'), '0'));
 //

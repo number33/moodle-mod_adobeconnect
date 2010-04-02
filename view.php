@@ -53,6 +53,14 @@ require_login($course, true, $cm);
 
 global $CFG, $USER;
 
+// Check if the user's email is the Connect Pro user's login
+$usrobj = new stdClass();
+$usrobj = clone($USER);
+
+if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+    $usrobj->username = $usrobj->email;
+}
+
 add_to_log($course->id, "adobeconnect", "view", "view.php?id=$cm->id", "$adobeconnect->id");
 
 /// Print the page header
@@ -75,7 +83,7 @@ print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '',
 
 if (0 != $cm->groupmode){
     if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $USER->id);
+        $groups = groups_get_user_groups($course->id, $usrobj->id);
 
         if (array_key_exists(0, $groups)) {
             $groupid = current($groups[0]);
@@ -93,7 +101,7 @@ if (0 != $cm->groupmode){
 }
 
 /// Print the main part of the page
-$usrgroups = groups_get_user_groups($cm->course, $USER->id);
+$usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
 $usrgroups = $usrgroups[0]; // Just want groups and not groupings
 
 $sql = "SELECT meetingscoid FROM {$CFG->prefix}adobeconnect_meeting_groups amg WHERE ".
@@ -147,8 +155,8 @@ if (!empty($meetscoids)) {
 
 
     // Check if the user exists and if not create the new user
-    if (!($usrprincipal = aconnect_user_exists($aconnect, $USER))) {
-        if (!($usrprincipal = aconnect_create_user($aconnect, $USER))) {
+    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
+        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
             // DEBUG
             debugging("error creating user", DEBUG_DEVELOPER);
 
@@ -163,8 +171,8 @@ if (!empty($meetscoids)) {
     if ($cm->groupmode) {
         $context = get_context_instance(CONTEXT_MODULE, $id);
 
-        if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
-            has_capability('mod/adobeconnect:meetingparticipant', $context, $USER->id)) {
+        if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
+            has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
             if (aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE)) {
                 //DEBUG
                 // echo 'true';
@@ -184,8 +192,8 @@ if (!empty($meetscoids)) {
 }
 
 // Log in the current user
-$login = $USER->username;
-$password  = $USER->username;
+$login = $usrobj->username;
+$password  = $usrobj->username;
 
 $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
 $aconnect->request_http_header_login(1, $login);
@@ -239,7 +247,7 @@ aconnect_logout($aconnect);
 
 $context = get_context_instance(CONTEXT_MODULE, $cm->id);
 
-$sesskey = !empty($USER->sesskey) ? $USER->sesskey : '';
+$sesskey = !empty($usrobj->sesskey) ? $usrobj->sesskey : '';
 
 echo '<br /><br />';
 echo '<form name="meetingdetail" action="' . $CFG->wwwroot . '/mod/adobeconnect/view.php" method="post">' . "\n";
@@ -330,8 +338,8 @@ echo button_to_popup_window('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='
                             'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
 echo '</div>'."\n";
 
-if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
-    has_capability('mod/adobeconnect:meetinghost', $context, $USER->id)){
+if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
+    has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id)){
     echo '<div class="aconbtnroles">'."\n";
     echo '<input type="submit" name="participants" value="'.get_string('selectparticipants', 'adobeconnect').'">';
     echo '</div>'."\n";
@@ -350,8 +358,8 @@ echo '<br />';
 $showrecordings = false;
 // Check if meeting is private, if so check the user's capability.  If public show recorded meetings
 if (!$adobeconnect->meetingpublic) {
-    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $USER->id) or
-        has_capability('mod/adobeconnect:meetingparticipant', $context, $USER->id)) {
+    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
+        has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
             $showrecordings = true;
     }
 } else {
