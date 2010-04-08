@@ -173,8 +173,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         notice('You are not a participant for this meeting');
     } else {
 
-        $login = $USER->username;
-        $password  = $USER->username;
+        $login = $usrobj->username;
 
         $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
         $aconnect->request_http_header_login(1, $login);
