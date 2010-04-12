@@ -98,7 +98,8 @@ class connect_class {
 //            https://example.com/api/xml?action=principal=list
             curl_setopt($ch, CURLOPT_URL, $this->_serverurl/* . '?action=login&external-auth=use'*/);
         } else {
-            curl_setopt($ch, CURLOPT_URL, $this->_serverurl . '?session='. $this->_cookie);
+            $querystring = (!empty($this->_cookie)) ?  '?session='. $this->_cookie : '';
+            curl_setopt($ch, CURLOPT_URL, $this->_serverurl . $querystring);
         }
 
 
@@ -137,7 +138,6 @@ class connect_class {
         // The first parameter is 1 because we want to include the response header
         // to extract the session cookie
         if (!empty($username)) {
-            //$hearder = array('rl-user-id: ' . $username);
             $hearder = array("$CFG->adobeconnect_admin_httpauth: " . $username);
         }
 
