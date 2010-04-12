@@ -98,7 +98,8 @@ class connect_class {
 //            https://example.com/api/xml?action=principal=list
             curl_setopt($ch, CURLOPT_URL, $this->_serverurl/* . '?action=login&external-auth=use'*/);
         } else {
-            curl_setopt($ch, CURLOPT_URL, $this->_serverurl . '?session='. $this->_cookie);
+            $querystring = (!empty($this->_cookie)) ?  '?session='. $this->_cookie : '';
+            curl_setopt($ch, CURLOPT_URL, $this->_serverurl . $querystring);
         }
 
 
