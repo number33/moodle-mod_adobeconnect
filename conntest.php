@@ -14,7 +14,7 @@
     }
 
     $serverhost = required_param('serverURL', PARAM_NOTAGS);
-    $port       = required_param('port', PARAM_INT);
+    $port       = optional_param('port', 80, PARAM_INT);
     $username   = required_param('authUsername', PARAM_NOTAGS);
     $password   = required_param('authPassword', PARAM_NOTAGS);
     $httpheader = required_param('authHTTPheader', PARAM_NOTAGS);

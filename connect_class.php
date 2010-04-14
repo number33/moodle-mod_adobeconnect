@@ -18,7 +18,7 @@ class connect_class {
     var $_apicall;
     var $_connection;
 
-    public function __construct($serverurl = '', $serverport = '', $username = '', $password = '', $cookie = '') {
+    public function __construct($serverurl = '', $serverport = 80, $username = '', $password = '', $cookie = '') {
         $this->_serverurl = $serverurl;
         $this->_serverport = $serverport;
         $this->_username = $username;

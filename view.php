@@ -273,8 +273,15 @@ echo '</div>'."\n";
 if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     has_capability('mod/adobeconnect:meetinghost', $context)) {
 
-    $url = 'http://' . $CFG->adobeconnect_meethost . ':'
-                     . $CFG->adobeconnect_port . $meeting->url;
+    // Include the port number only if it is a port other than 80
+    $port = '';
+
+    if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
+        $port = ':' . $CFG->adobeconnect_port;
+    }
+
+    $url = 'http://' . $CFG->adobeconnect_meethost . $port
+           . $meeting->url;
     echo '<div class="aconmeetinforow">'."\n";
 
     echo '<div class="aconlabeltitle" id="aconmeeturltitle">'."\n";
@@ -367,6 +374,14 @@ if (!$adobeconnect->meetingpublic) {
 }
 
 $recordings = $recording;
+
+// Include the port number only if it is a port other than 80
+$port = '';
+
+if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
+    $port = ':' . $CFG->adobeconnect_port;
+}
+
 if ($showrecordings and !empty($recordings)) {
 
     echo '<div id="aconfldset2" class="aconfldset">'."\n";
@@ -378,8 +393,8 @@ if ($showrecordings and !empty($recordings)) {
         if (!empty($recordinggrp)) {
             foreach($recordinggrp as $recording) {
                 echo '<div class="aconrecordingrow">'."\n";
-                echo '<a href="http://'.$CFG->adobeconnect_meethost.':'.
-                     $CFG->adobeconnect_port.$recording->url.'?session='.$adobesession.
+                echo '<a href="http://'.$CFG->adobeconnect_meethost.$port
+                     .$recording->url.'?session='.$adobesession.
                      '" target="_blank">'.$recording->name.'</a><br />';
                 echo '</div>'."\n";
             }
