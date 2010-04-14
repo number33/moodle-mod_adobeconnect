@@ -9,7 +9,7 @@
  * @package mod/adobeconnect
  */
 
-$module->version  = 2009121504;  // The current module version (Date: YYYYMMDDXX)
+$module->version  = 2009121505;  // The current module version (Date: YYYYMMDDXX)
 $module->cron     = 0;           // Period for cron to check this module (secs)
 
 ?>

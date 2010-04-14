@@ -54,8 +54,16 @@ class meeting_detail_form extends moodleform {
         $context = get_context_instance(CONTEXT_MODULE, $cmid);
 
         if (has_capability('mod/adobeconnect:meetingpresenter', $context)) {
-            $url = 'http://' . $CFG->adobeconnect_meethost . ':'
-                             . $CFG->adobeconnect_port . $meeting->url;
+            // Include the port number only if it is a port other than 80
+            $port = '';
+
+            if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
+                $port = ':' . $CFG->adobeconnect_port;
+            }
+
+
+            $url = 'http://' . $CFG->adobeconnect_meethost . $port
+                   . $meeting->url;
             $mform->addElement('static', 'meetingurl', get_string('meeturl', 'adobeconnect'),
                       $url);
         }

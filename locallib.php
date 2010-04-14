@@ -21,17 +21,19 @@ define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only r
 
 define('ADOBE_TMZ_LENGTH', 4);
 
-function adobe_connection_test($host = '', $port = '', $username = '', $password = '', $httpheader = '', $emaillogin) {
+function adobe_connection_test($host = '', $port = 80, $username = '', $password = '', $httpheader = '', $emaillogin) {
 
     if (empty($host) or
-        empty($port) or
+        empty($port) or (0 == $port) or
         empty($username) or
         empty($password) or
         empty($httpheader)) {
 
-        echo "</p>One of the required parameters is blank: <br />".
+        echo "</p>One of the required parameters is blank or incorrect: <br />".
              "Host: $host<br /> Port: $port<br /> Username: $username<br /> Password: $password".
              "<br /> HTTP Header: $httpheader</p>";
+
+        die();
     }
 
     $messages = array();
@@ -298,7 +300,6 @@ function aconnect_login() {
     global $CFG, $USER, $COURSE;
 
     if (!isset($CFG->adobeconnect_host) or
-        !isset($CFG->adobeconnect_port) or
         !isset($CFG->adobeconnect_admin_login) or
         !isset($CFG->adobeconnect_admin_password)) {
             if (is_siteadmin($USER->id)) {
@@ -308,6 +309,14 @@ function aconnect_login() {
                 notice(get_string('notsetupproperty', 'adobeconnect'),
                        '', $COURSE);
             }
+    }
+
+    if (isset($CFG->adobeconnect_port) and
+        !empty($CFG->adobeconnect_port) and
+        ((80 != $CFG->adobeconnect_port) and (0 != $CFG->adobeconnect_port))) {
+        $port = $CFG->adobeconnect_port;
+    } else {
+        $port = 80;
     }
 
     $aconnect = new connect_class_dom($CFG->adobeconnect_host,

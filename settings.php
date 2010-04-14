@@ -9,7 +9,7 @@ $settings->add(new admin_setting_configtext('adobeconnect_meethost', get_string(
                    get_string('meethost_desc', 'adobeconnect'), 'localhost', PARAM_URL));
 
 $settings->add(new admin_setting_configtext('adobeconnect_port', get_string('port', 'adobeconnect'),
-                   get_string('port_desc', 'adobeconnect'), '700', PARAM_INT));
+                   get_string('port_desc', 'adobeconnect'), '80', PARAM_INT));
 
 $settings->add(new admin_setting_configtext('adobeconnect_admin_login', get_string('admin_login', 'adobeconnect'),
                    get_string('admin_login_desc', 'adobeconnect'), 'admin', PARAM_TEXT));
@@ -18,7 +18,7 @@ $settings->add(new admin_setting_configpasswordunmask('adobeconnect_admin_passwo
                    get_string('admin_password_desc', 'adobeconnect'), ''));
 
 $settings->add(new admin_setting_configtext('adobeconnect_admin_httpauth', get_string('admin_httpauth', 'adobeconnect'),
-                   get_string('admin_httpauth_desc', 'adobeconnect'), 'rl-user-id', PARAM_TEXT));
+                   get_string('admin_httpauth_desc', 'adobeconnect'), 'my-user-id', PARAM_TEXT));
 
 $settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
                    get_string('email_login_desc', 'adobeconnect'), '0'));

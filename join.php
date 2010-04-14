@@ -178,8 +178,15 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
         $aconnect->request_http_header_login(1, $login);
 
-        redirect('http://' . $CFG->adobeconnect_meethost . ':'
-                 . $CFG->adobeconnect_port . $meeting->url
+        // Include the port number only if it is a port other than 80
+        $port = '';
+
+        if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
+            $port = ':' . $CFG->adobeconnect_port;
+        }
+
+        redirect('http://' . $CFG->adobeconnect_meethost . $port
+                 . $meeting->url
                  . '?session=' . $aconnect->get_cookie());
     }
 } else {
