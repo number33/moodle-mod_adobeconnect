@@ -19,7 +19,7 @@ define('ADOBE_MEETPERM_PUBLIC', 0); //means the Acrobat Connect meeting is publi
 define('ADOBE_MEETPERM_PROTECTED', 1); //means the meeting is protected, and only registered users and accepted guests can enter the room.
 define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only registered users and participants can enter the room
 
-define('ADOBE_TMZ_LENGTH', 4);
+define('ADOBE_TMZ_LENGTH', 6);
 
 function adobe_connection_test($host = '', $port = 80, $username = '', $password = '', $httpheader = '', $emaillogin) {
 
@@ -93,7 +93,8 @@ function adobe_connection_test($host = '', $port = 80, $username = '', $password
             $aconnectDOM->create_request($params);
 
             if ($aconnectDOM->call_success()) {
-                echo '<p style="color:#006633">successfully logged in as ' . $username .'</p>';
+                echo '<p style="color:#006633">successfully logged in as admin user</p>';
+                //$username
 
                 //Test retrevial of folders
                 echo '<p>Testing retrevial of shared content, recording and meeting folders:</p>';
@@ -725,7 +726,7 @@ function aconnect_update_meeting_perm($aconnect, $meetingscoid, $perm) {
 
  }
 
-/** CONTRIB-1976
+/** CONTRIB-1976, CONTRIB-1992
  * This function adds a fraction of a second to the ISO 8601 date
  * @param int $time unix timestamp
  * @return mixed a string (ISO 8601) containing the decimal fraction of a second
@@ -741,10 +742,7 @@ function aconnect_format_date_seconds($time) {
 
     $diff = $length - $pos;
 
-    if (!(0 < $diff) and !(ADOBE_TMZ_LENGTH == $diff)) {
-        return false;
-    } else {
-
+    if ((0 < $diff) and (ADOBE_TMZ_LENGTH == $diff)) {
         $firstpart = substr($date, 0, $pos);
         $lastpart = substr($date, $pos);
         $newdate = $firstpart . '.000' . $lastpart;
@@ -757,16 +755,16 @@ function aconnect_format_date_seconds($time) {
 
     $diff = $length - $pos;
 
-    if (!(0 < $diff) and !(ADOBE_TMZ_LENGTH == $diff)) {
-        return false;
-    } else {
-
+    if ((0 < $diff) and (ADOBE_TMZ_LENGTH == $diff)) {
         $firstpart = substr($date, 0, $pos);
         $lastpart = substr($date, $pos);
         $newdate = $firstpart . '.000' . $lastpart;
 
         return $newdate;
+
     }
+
+    return false;
 }
 
 /**
