@@ -17,10 +17,7 @@ require_once('locallib.php');
  *     actions across all modules.
  */
 
-/// (replace adobeconnect with the name of your module and delete this line)
-
-$adobeconnect_EXAMPLE_CONSTANT = 42;     /// for example
-
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Given an object containing all the necessary data,
@@ -33,7 +30,7 @@ $adobeconnect_EXAMPLE_CONSTANT = 42;     /// for example
  */
 function adobeconnect_add_instance($adobeconnect) {
 
-    global $COURSE, $USER;
+    global $COURSE, $USER, $DB;
     $adobeconnect->timecreated = time();
     $return = false;
     $meeting = new stdClass();
@@ -51,7 +48,7 @@ function adobeconnect_add_instance($adobeconnect) {
         }
     }
 
-    $recid = insert_record('adobeconnect', $adobeconnect);
+    $recid = $DB->insert_record('adobeconnect', $adobeconnect);
 
     if (empty($recid)) {
         return false;
@@ -94,7 +91,7 @@ function adobeconnect_add_instance($adobeconnect) {
             $record->meetingscoid = $meetingscoid;
             $record->groupid = $crsgroup->id;
 
-            $record->id = insert_record('adobeconnect_meeting_groups', $record);
+            $record->id = $DB->insert_record('adobeconnect_meeting_groups', $record);
 
             // Add event to calendar
             $event = new stdClass();
@@ -132,7 +129,7 @@ function adobeconnect_add_instance($adobeconnect) {
         $record->meetingscoid = $meetingscoid;
         $record->groupid = 0;
 
-        $record->id = insert_record('adobeconnect_meeting_groups', $record);
+        $record->id = $DB->insert_record('adobeconnect_meeting_groups', $record);
 
         // Add event to calendar
         $event = new stdClass();
@@ -163,11 +160,11 @@ function adobeconnect_add_instance($adobeconnect) {
         if (!empty($meeting)) {
             $meeting = current($meeting);
 
-        $record = new stdClass();
-        $record->id = $recid;
-        $record->meeturl = trim($meeting->url, '/');
-        update_record('adobeconnect', $record);
-    }
+            $record = new stdClass();
+            $record->id = $recid;
+            $record->meeturl = trim($meeting->url, '/');
+            $DB->update_record('adobeconnect', $record);
+        }
     }
 
     aconnect_logout($aconnect);
@@ -192,6 +189,7 @@ function adobeconnect_add_instance($adobeconnect) {
  * @param object $adobeconnect An object from the form in mod_form.php
  * @return boolean Success/Fail
  */
+ /**TODO: change the rest of the DML methods **/
 function adobeconnect_update_instance($adobeconnect) {
 
     $adobeconnect->timemodified = time();
@@ -333,7 +331,7 @@ function adobeconnect_update_instance($adobeconnect) {
 
     aconnect_logout($aconnect);
 
-    return update_record('adobeconnect', $adobeconnect);
+    return $DB->update_record('adobeconnect', $adobeconnect);
 }
 
 

@@ -1,0 +1,28 @@
+<p><img alt="" src="<?php echo $CFG->wwwroot?>/mod/adobeconnect/icon.gif" />&nbsp;<b>Meeting URL</b></p>
+<div class="indent">
+<p>You can customize the URL that is used to connect to the Adobe connect meeting.  The Adobe Server domain will always remain the same.
+  However the last part of the URL can be customized.
+</p>
+<p>For example if the Adobe Connect server domain was located at <b>http://adobe.connect.server/</b>
+  when customizing the URL to <b>mymeeting</b>, the URL to connect to the meeting would be <b>http://adobe.connect.server/mymeeting</b>.  Leave out the trailing forward slash
+</p>
+<p>Valid URL entries consists of the name with 
+<ul>
+<li>mymeeting</li>
+<li>/mymeeting</li>
+</ul>
+
+Invalid URL entries consist of more than one forward slash:
+<ul>
+<li>mymeeting/mymeeting</li>
+<li>mymeeting/mymeeting/</li>
+<li>mymeeting/mymeeting//anothermeeting</li>
+<li>mymeeting/</li>
+</ul>
+
+</p>
+<p>Once the meeting has been saved, you will no longer be able to edit/update this field as the field will be disabled.
+If updating the activity settings and if <b>Groups Mode</b> is set to no group then you will see part of the URL in the text field.
+Otherwise the text field will remain blank as each course group will have their own meeting URL.  
+</p>
+</div>
