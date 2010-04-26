@@ -1,5 +1,6 @@
 
 function adobetestConnection(obj) {
+alert("high");
 // This function will open a popup window to test the server parameters for a successful connection.
 
     if ((obj.id_s__adobeconnect_host.value.length == 0) || (obj.id_s__adobeconnect_host.value == '')) {
@@ -20,5 +21,12 @@ function adobetestConnection(obj) {
         queryString += "&authEmaillogin=0";
     }
     
-    return openpopup('/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest', 'scrollbars=yes,resizable=no,width=640,height=300');
+    var args = null;
+    args.url = '/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest';
+    args.name = 'Adobe Connect Pro test window';
+    args.options = 'scrollbars=yes,resizable=no,width=640,height=300';
+    
+    /*return openpopup('onclick', '/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest', 'scrollbars=yes,resizable=no,width=640,height=300');*/
+    alert(args.url);
+    /*return openpopup('onclick', args);*/
 }

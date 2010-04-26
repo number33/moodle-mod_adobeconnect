@@ -1,6 +1,7 @@
 <?php // $Id$
+global $PAGE;
 require_once($CFG->dirroot . '/mod/adobeconnect/locallib.php');
-require_js($CFG->wwwroot . '/mod/adobeconnect/testserverconnection.js');
+$PAGE->requires->js('/mod/adobeconnect/testserverconnection.js');
 
 $settings->add(new admin_setting_configtext('adobeconnect_host', get_string('host', 'adobeconnect'),
                    get_string('host_desc', 'adobeconnect'), 'localhost/api/xml', PARAM_URL));

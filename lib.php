@@ -70,6 +70,20 @@ function adobeconnect_add_instance($adobeconnect) {
 
         // Create the meeting for each group
         foreach($crsgroups as $crsgroup) {
+
+            // The teacher role if they don't already have one and
+            // Assign them to each group
+            if (!groups_is_member($crsgroup->id, $USER->id)) {
+                $roleid = get_field('role', 'id', 'shortname', 'editingteacher');
+
+                if (!user_has_role_assignment($USER->id, $roleid, $context->id)) {
+                    role_assign($roleid, $USER->id, 0, $context->id);
+                }
+
+                groups_add_member($crsgroup->id, $USER->id);
+
+            }
+
             $meeting->name = $adobeconnect->name . '_' . $crsgroup->name;
 
             if (!empty($adobeconnect->meeturl)) {
@@ -191,6 +205,7 @@ function adobeconnect_add_instance($adobeconnect) {
  */
  /**TODO: change the rest of the DML methods **/
 function adobeconnect_update_instance($adobeconnect) {
+    global $DB;
 
     $adobeconnect->timemodified = time();
     $adobeconnect->id = $adobeconnect->instance;
@@ -224,7 +239,8 @@ function adobeconnect_update_instance($adobeconnect) {
     }
 
     // Get all instances of the activity meetings
-    $grpmeetings = get_records('adobeconnect_meeting_groups', 'instanceid', $adobeconnect->instance);
+    $param = array('instanceid' => $adobeconnect->instance);
+    $grpmeetings = $DB->get_records('adobeconnect_meeting_groups', $param);
 
     if (empty($grpmeetings)) {
         $grpmeetings = array();
@@ -303,8 +319,10 @@ function adobeconnect_update_instance($adobeconnect) {
             }
 
             // Update calendar event
-            $eventid = get_field('event', 'id', 'courseid', $adobeconnect->course,
-                                 'instance', $adobeconnect->id, 'groupid', $grpmeeting->groupid);
+            $params = array('courseid' => $adobeconnect->course,
+                            'instance' => $adobeconnect->id,
+                            'groupid' => $grpmeeting->groupid);
+            $eventid = $DB->get_field('event', 'id', $params);
 
             if (!empty($eventid)) {
                 $event = new stdClass();
@@ -344,22 +362,27 @@ function adobeconnect_update_instance($adobeconnect) {
  * @return boolean Success/Failure
  */
 function adobeconnect_delete_instance($id) {
+    global $DB;
 
-    if (! $adobeconnect = get_record('adobeconnect', 'id', $id)) {
+    $param = array('id' => $id);
+    if (! $adobeconnect = $DB->get_record('adobeconnect', $param)) {
         return false;
     }
 
     $result = true;
 
     // Remove meeting from Adobe connect server
-    $adbmeetings = get_records('adobeconnect_meeting_groups', 'instanceid', $adobeconnect->id);
+    $param = array('instanceid' => $adobeconnect->id);
+    $adbmeetings = $DB->get_records('adobeconnect_meeting_groups', $param);
 
     if (!empty($adbmeetings)) {
         $aconnect = aconnect_login();
         foreach ($adbmeetings as $meeting) {
             // Update calendar event
-            $eventid = get_field('event', 'id', 'courseid', $adobeconnect->course,
-                                 'instance', $adobeconnect->id, 'groupid', $meeting->groupid);
+            $param = array('courseid' => $adobeconnect->course,
+                           'instance' => $adobeconnect->id,
+                           'groupid' => $meeting->groupid);
+            $eventid = $DB->get_field('event', 'id', $param);
 
             if (!empty($eventid)) {
                 delete_event($eventid);
@@ -371,9 +394,10 @@ function adobeconnect_delete_instance($id) {
         aconnect_logout($aconnect);
     }
 
-
-    if (! delete_records('adobeconnect', 'id', $adobeconnect->id) and
-        ! delete_records('adobeconnect_meeting_groups', 'instanceid', $adobeconnect->id)) {
+    $firstparam = array('id' => $adobeconnect->id);
+    $secondparam = array('instanceid' => $adobeconnect->id);
+    if (! $DB->delete_records('adobeconnect', $firstparam) and
+        ! delete_records('adobeconnect_meeting_groups', $secondparam)) {
         $result = false;
     }
 
@@ -495,85 +519,115 @@ function adobeconnect_scale_used_anywhere($scaleid) {
  * @return boolean true if success, false on error
  */
 function adobeconnect_install() {
+    global $DB;
+
     $result = true;
     $timenow = time();
     $sysctx  = get_context_instance(CONTEXT_SYSTEM);
 
 //    $adminrid          = get_field('role', 'id', 'shortname', 'admin');
-    $coursecreatorrid  = get_field('role', 'id', 'shortname', 'coursecreator');
-    $editingteacherrid = get_field('role', 'id', 'shortname', 'editingteacher');
-    $teacherrid        = get_field('role', 'id', 'shortname', 'teacher');
+    $param = array('shortname' => 'coursecreator');
+    $coursecreatorrid  = $DB->get_field('role', 'id', $param);
+    $param = array('shortname' => 'editingteacher');
+    $editingteacherrid = $DB->get_field('role', 'id', $param);
+    $param = array('shortname' => 'teacher');
+    $teacherrid        = $DB->get_field('role', 'id', $param);
 
 /// Fully setup the Adobe Connect Presenter role.
-    if ($result && !$mrole = get_record('role', 'shortname', 'adobeconnectpresenter')) {
+    $param = array('shortname' => 'adobeconnectpresenter');
+    if ($result && !$mrole = $DB->get_record('role', $param)) {
         if ($rid = create_role(get_string('adobeconnectpresenter', 'adobeconnect'), 'adobeconnectpresenter',
                                get_string('adobeconnectpresenterdescription', 'adobeconnect'))) {
 
-            $mrole  = get_record('role', 'id', $rid);
+            $param = array('id' => $rid);
+            $mrole  = $DB->get_record('role', $param);
             $result = $result && assign_capability('mod/adobeconnect:meetingpresenter', CAP_ALLOW, $mrole->id, $sysctx->id);
         } else {
             $result = false;
         }
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $coursecreatorrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $coursecreatorrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($coursecreatorrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $editingteacherrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $editingteacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($editingteacherrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $teacherrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $teacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($teacherrid, $mrole->id);
     }
 
 /// Fully setup the Adobe Connect Participant role.
-    if ($result && !$mrole = get_record('role', 'shortname', 'adobeconnectparticipant')) {
+    $param = array('shortname' => 'adobeconnectparticipant');
+    if ($result && !$mrole = $DB->get_record('role', $param)) {
         if ($rid = create_role(get_string('adobeconnectparticipant', 'adobeconnect'), 'adobeconnectparticipant',
                                get_string('adobeconnectparticipantdescription', 'adobeconnect'))) {
 
-            $mrole  = get_record('role', 'id', $rid);
+            $param = array('id' => $rid);
+            $mrole  = $DB->get_record('role', $param);
             $result = $result && assign_capability('mod/adobeconnect:meetingparticipant', CAP_ALLOW, $mrole->id, $sysctx->id);
         } else {
             $result = false;
         }
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $coursecreatorrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $coursecreatorrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($coursecreatorrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $editingteacherrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $editingteacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($editingteacherrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $teacherrid)) {
+
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $teacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
         $result = $result && allow_assign($teacherrid, $mrole->id);
     }
 
 
 /// Fully setup the Adobe Connect Host role.
-    if ($result && !$mrole = get_record('role', 'shortname', 'adobeconnecthost')) {
+    if ($result && !$mrole = $DB->get_record('role', 'shortname', 'adobeconnecthost')) {
         if ($rid = create_role(get_string('adobeconnecthost', 'adobeconnect'), 'adobeconnecthost',
                                get_string('adobeconnecthostdescription', 'adobeconnect'))) {
 
-            $mrole  = get_record('role', 'id', $rid);
+            $param = array('id' => $rid);
+            $mrole  = $DB->get_record('role', $param);
             $result = $result && assign_capability('mod/adobeconnect:meetinghost', CAP_ALLOW, $mrole->id, $sysctx->id);
         } else {
             $result = false;
         }
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $coursecreatorrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $coursecreatorrid);
+    if (!$DB->get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $coursecreatorrid)) {
         $result = $result && allow_assign($coursecreatorrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $editingteacherrid)) {
+
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $editingteacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $editingteacherrid)) {
         $result = $result && allow_assign($editingteacherrid, $mrole->id);
     }
 
-    if (!get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $teacherrid)) {
+    $param = array('allowassign' => $mrole->id,
+                   'roleid' => $teacherrid);
+    if (!$DB->get_field('role_allow_assign', 'id', 'allowassign', $mrole->id, 'roleid', $teacherrid)) {
         $result = $result && allow_assign($teacherrid, $mrole->id);
     }
 
@@ -588,32 +642,26 @@ function adobeconnect_install() {
  * @return boolean true if success, false on error
  */
 function adobeconnect_uninstall() {
+    global $DB;
     $result = true;
 
-    if ($mrole = get_record('role', 'shortname', 'adobeconnectparticipant')) {
+    $param = array('shortname' => 'adobeconnectparticipant');
+    if ($mrole = $DB->get_record('role', $param)) {
         $result = $result && delete_role($mrole->id);
         $result = $result && delete_records('role_allow_assign', 'allowassign', $mrole->id);
     }
 
-    if ($prole = get_record('role', 'shortname', 'adobeconnectpresenter')) {
+    $param = array('shortname' => 'adobeconnectpresenter');
+    if ($prole = $DB->get_record('role', $param)) {
         $result = $result && delete_role($prole->id);
         $result = $result && delete_records('role_allow_assign', 'allowassign', $prole->id);
     }
 
-    if ($prole = get_record('role', 'shortname', 'adobeconnecthost')) {
+    $param = array('shortname' => 'adobeconnecthost');
+    if ($prole = $DB->get_record('role', $param)) {
         $result = $result && delete_role($prole->id);
         $result = $result && delete_records('role_allow_assign', 'allowassign', $prole->id);
     }
 
     return $result;
 }
-
-
-//////////////////////////////////////////////////////////////////////////////////////
-/// Any other adobeconnect functions go here.  Each of them must have a name that
-/// starts with adobeconnect_
-/// Remember (see note in first lines) that, if this section grows, it's HIGHLY
-/// recommended to move all funcions below to a new "localib.php" file.
-
-
-?>
