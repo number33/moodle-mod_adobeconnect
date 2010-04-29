@@ -22,7 +22,6 @@ define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only r
 define('ADOBE_TMZ_LENGTH', 6);
 
 function adobe_connection_test($host = '', $port = 80, $username = '', $password = '', $httpheader = '', $emaillogin) {
-
     if (empty($host) or
         empty($port) or (0 == $port) or
         empty($username) or

@@ -22,35 +22,35 @@ $groupid = optional_param('group', 0, PARAM_INT);
 
 if ($id) {
     if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
-        error('Course Module ID was incorrect');
+        print_error('Course Module ID was incorrect', 'adobeconnect', '', "Id = $id " . var_dump($cm));
     }
 
-    if (! $course = get_record('course', 'id', $cm->course)) {
-        error('Course is misconfigured');
+    if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
+        print_error('Course is misconfigured', 'adobeconnect', '', "cm_course = {$cm->course} " . var_dump($course));
     }
 
-    if (! $adobeconnect = get_record('adobeconnect', 'id', $cm->instance)) {
-        error('Course module is incorrect');
+    if (! $adobeconnect = $DB->get_record('adobeconnect', array('id' => $cm->instance))) {
+        print_error('Course module is incorrect', 'adobeconnect', '', "cm_instance = {$cm->instance} " . var_dump($adobeconnect));
     }
 
 } else if ($a) {
-    if (! $adobeconnect = get_record('adobeconnect', 'id', $a)) {
-        error('Course module is incorrect');
+    if (! $adobeconnect = get_record('adobeconnect', array('id' => $a))) {
+        print_error('Course module is incorrect', 'adobeconnect', '', "a = {$a} " . var_dump($adobeconnect));
     }
-    if (! $course = get_record('course', 'id', $adobeconnect->course)) {
-        error('Course is misconfigured');
+    if (! $course = get_record('course', array('id' => $adobeconnect->course))) {
+        print_error('Course is misconfigured', 'adobeconnect', '', "adobeconnect_course = {$adobeconnect->course} " . var_dump($course));
     }
     if (! $cm = get_coursemodule_from_instance('adobeconnect', $adobeconnect->id, $course->id)) {
-        error('Course Module ID was incorrect');
+        print_error('Course Module ID was incorrect', 'adobeconnect', '', "adobeconnect_id = {$adobeconnect->id}, course_id{$course->id} " . var_dump($cm));
     }
 
 } else {
-    error('You must specify a course_module ID or an instance ID');
+    print_error('You must specify a course_module ID or an instance ID', 'adobeconnect');
 }
 
 require_login($course, true, $cm);
 
-global $CFG, $USER;
+global $CFG, $USER, $PAGE, $DB, $OUTPUT;
 
 // Check if the user's email is the Connect Pro user's login
 $usrobj = new stdClass();
@@ -63,17 +63,16 @@ if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_lo
 add_to_log($course->id, "adobeconnect", "view", "view.php?id=$cm->id", "$adobeconnect->id");
 
 /// Print the page header
-$stradobeconnects = get_string('modulenameplural', 'adobeconnect');
-$stradobeconnect  = get_string('modulename', 'adobeconnect');
+$PAGE->set_course($course);
+$PAGE->set_cm($cm);
+$PAGE->set_url('/mod/adobeconnect/view.php?id='.$id);
+$PAGE->set_pagelayout('base');
+$PAGE->set_title(format_string($adobeconnect->name));
+$PAGE->set_heading(format_string($adobeconnect->name));
+echo $OUTPUT->header();
 
-$navlinks = array();
-$navlinks[] = array('name' => $stradobeconnects, 'link' => "index.php?id=$course->id", 'type' => 'activity');
-$navlinks[] = array('name' => format_string($adobeconnect->name), 'link' => '', 'type' => 'activityinstance');
+//echo $OUTPUT->update_module_button($cm->id, 'adobeconnect');
 
-$navigation = build_navigation($navlinks);
-
-print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '', true,
-              update_module_button($cm->id, $course->id, $stradobeconnect), navmenu($course, $cm));
 
 // Check for empy group id, if empty check if this user belongs to any
 // group in the course and set the first group found as the default.
@@ -107,7 +106,7 @@ $sql = "SELECT meetingscoid FROM {$CFG->prefix}adobeconnect_meeting_groups amg W
        "amg.instanceid = {$cm->instance}";
 
 
-$meetscoids = get_records_sql($sql);
+$meetscoids = $DB->get_records_sql($sql);
 $recording = array();
 
 if (!empty($meetscoids)) {
@@ -207,7 +206,7 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
         // Otherwise the user would have to re-assign users for every activity instance
         $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-        $roleid = get_field('role', 'id', 'shortname', 'adobeconnectpresenter');
+        $roleid = $DB->get_field('role', 'id', array('shortname' => 'adobeconnectpresenter'));
 
         if (!empty($roleid)) {
             redirect("assign.php?id=$id&amp;contextid={$context->id}&amp;roleid=$roleid&amp;groupid={$formdata->group}", '', 0);
@@ -229,7 +228,7 @@ if ($cm->groupmode) {
 $aconnect = aconnect_login();
 
 // Get the Meeting details
-$scoid = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
+$scoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid', array('instanceid' => $adobeconnect->id, 'groupid' => $groupid));
 $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
 $filter = array('filter-sco-id' => $scoid);
 
@@ -340,8 +339,13 @@ echo '<br />';
 echo '<div class="aconbtnrow">'."\n";
 
 echo '<div class="aconbtnjoin">'."\n";
-echo button_to_popup_window('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid,
-                            'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
+
+$attributes['id'] = $OUTPUT->add_action_handler(new popup_action('click', '/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid));
+print_object($attributes['id']);
+echo $OUTPUT->single_button('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid,
+                            get_string('joinmeeting', 'adobeconnect'), $attributes);
+//echo button_to_popup_window('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid,
+//                            'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
 echo '</div>'."\n";
 
 if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
@@ -406,6 +410,4 @@ if ($showrecordings and !empty($recordings)) {
 }
 
 /// Finish the page
-print_footer($course);
-
-?>
+$OUTPUT->footer();

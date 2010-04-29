@@ -1,6 +1,10 @@
 <?php  // $Id$
 
 require_once('locallib.php');
+/** Require {@link eventslib.php} */
+require_once($CFG->libdir . '/eventslib.php');
+/** Require {@link calendar/lib.php} */
+require_once($CFG->dirroot . '/calendar/lib.php');
 
 /**
  * Library of functions and constants for module adobeconnect
@@ -30,7 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 function adobeconnect_add_instance($adobeconnect) {
 
-    global $COURSE, $USER, $DB;
+    global $COURSE, $USER, $DB;//print_object($adobeconnect);die();
+
     $adobeconnect->timecreated = time();
     $return = false;
     $meeting = new stdClass();
@@ -47,6 +52,9 @@ function adobeconnect_add_instance($adobeconnect) {
             echo 'role assignment failed'; die();
         }
     }
+
+    $adobeconnect->intro = $adobeconnect->introeditor['text'];
+    unset($adobeconnect->introeditor);
 
     $recid = $DB->insert_record('adobeconnect', $adobeconnect);
 
@@ -112,18 +120,17 @@ function adobeconnect_add_instance($adobeconnect) {
 
             $event->name = $meeting->name;
             $event->description = $adobeconnect->intro;
-            $event->format = 1;
             $event->courseid = $adobeconnect->course;
             $event->groupid = $crsgroup->id;
             $event->userid = 0;
             $event->instance = $recid;
-            $event->eventtype = '';
+            $event->eventtype = 'course';
             $event->timestart = $adobeconnect->starttime;
             $event->timeduration = $adobeconnect->endtime - $adobeconnect->starttime;
             $event->visible = 1;
             $event->modulename = 'adobeconnect';
 
-            add_event($event);
+            calendar_event::create($event);
 
         }
 
@@ -150,18 +157,17 @@ function adobeconnect_add_instance($adobeconnect) {
 
         $event->name = $meeting->name;
         $event->description = $adobeconnect->intro;
-        $event->format = 1;
         $event->courseid = $adobeconnect->course;
         $event->groupid = 0;
         $event->userid = 0;
         $event->instance = $recid;
-        $event->eventtype = '';
+        $event->eventtype = 'course';
         $event->timestart = $adobeconnect->starttime;
         $event->timeduration = $adobeconnect->endtime - $adobeconnect->starttime;
         $event->visible = 1;
         $event->modulename = 'adobeconnect';
 
-        add_event($event);
+        calendar_event::create($event);
 
     }
 
@@ -348,6 +354,9 @@ function adobeconnect_update_instance($adobeconnect) {
 
 
     aconnect_logout($aconnect);
+
+    $adobeconnect->intro = $adobeconnect->introeditor['text'];
+    unset($adobeconnect->introeditor);
 
     return $DB->update_record('adobeconnect', $adobeconnect);
 }

@@ -45,13 +45,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
     /// Adding the required "intro" field to hold the description of the instance
-        $mform->addElement('htmleditor', 'intro', get_string('adobeconnectintro', 'adobeconnect'));
-        $mform->setType('intro', PARAM_RAW);
-        $mform->addRule('intro', get_string('required'), 'required', null, 'client');
-        $mform->setHelpButton('intro', array('writing', 'richtext'), false, 'editorhelpbutton');
-
-    /// Adding "introformat" field
-        $mform->addElement('format', 'introformat', get_string('format'));
+        $this->add_intro_editor(false, get_string('adobeconnectintro', 'adobeconnect'));
 
 //-------------------------------------------------------------------------------
     /// Adding the rest of adobeconnect settings, spreeading all them into this fieldset
@@ -101,19 +95,19 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     }
 
     function data_preprocessing(&$default_values) {
-        global $CFG;
+        global $CFG, $DB;
 
         if (array_key_exists('update', $default_values)) {
             $sql = "SELECT id FROM {$CFG->prefix}adobeconnect_meeting_groups WHERE ".
                    "instanceid = " . $default_values['id'];
-            if (record_exists_sql($sql)) {
+            if ($DB->record_exists_sql($sql)) {
                 $default_values['tempenable'] = 0;
             }
         }
     }
 
     function validation($data, $files) {
-        global $CFG;
+        global $CFG, $DB;
 
         $errors = parent::validation($data, $files);
 
@@ -163,23 +157,54 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
             }
 
             // Check for local activities with the same name
-            if (record_exists('adobeconnect', 'name', $data['name'])) {
+            $param = array('name' => $data['name']);
+            if ($DB->record_exists('adobeconnect', $param)) {
                 $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                 return $errors;
             }
 
             // Check Adobe connect server for duplicated names
             foreach($namematches as $matchkey => $match) {
-                if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
-                    $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
+                //if group mode is disabled
+                if (0 == $data['groupmode']) {
+
+                    // Check if the lengths are the same
+                    if (strlen($data['name']) == strlen($match->name)) {
+
+                        if (0 == substr_compare($match->name, $data['name'], 0, strlen($data['name']), false)) {
+                            $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
+                        }
+                    }
+                } else {
+
+                    // else do a regular check to see if the names are the same
+                    if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
+                        $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
+                    }
                 }
+
             }
 
             foreach($urlmatches as $matchkey => $match) {
                 $matchurl = rtrim($match->url, '/');
-                if (0 == substr_compare($matchurl, $url . '_', 0, strlen($url . '_'), false)) {
-                    $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
+
+                //if group mode is disabled
+                if (0 == $data['groupmode']) {
+
+                    // Check if the lengths are the same
+                    if (strlen($matchurl) == strlen($url)) {
+                        if (0 == substr_compare($matchurl, $url, 0, strlen($url), false)) {
+                            $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
+                        }
+
+                    }
+                } else {
+
+                    if (0 == substr_compare($matchurl, $url . '_', 0, strlen($url . '_'), false)) {
+                        $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
+                    }
                 }
+
             }
 
         } else {
@@ -187,7 +212,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
             // Look for existing meeting names, excluding this activity's group meeting(s)
             $sql = "SELECT meetingscoid, groupid FROM {$CFG->prefix}adobeconnect_meeting_groups ".
                    " WHERE instanceid = ". $data['instance'];
-            $grpmeetings = get_records_sql($sql);
+            $grpmeetings = $DB->get_records_sql($sql);
 
             if (empty($grpmeetings)) {
                 $grpmeetings = array();

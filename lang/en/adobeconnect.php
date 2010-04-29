@@ -9,6 +9,7 @@ $string['admin_login_desc'] = 'Login for main admin account';
 $string['admin_password'] = 'Admin Password';
 $string['admin_password_desc'] = 'Password for main admin account';
 $string['adobeconnect'] = 'Adobe Connect';
+$string['adobeconnectadministration'] = 'Adobe Connect Administration';
 $string['adobeconnectfieldset'] = 'Adobe Connect Settings';
 $string['adobeconnecthost'] = 'Adobe Connect Host';
 $string['adobeconnecthostdescription'] = 'The host can give other users privileges, start and stop a meeting in addition to what a persenter can do';

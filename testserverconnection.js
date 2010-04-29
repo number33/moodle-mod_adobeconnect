@@ -1,12 +1,11 @@
 
 function adobetestConnection(obj) {
-alert("high");
 // This function will open a popup window to test the server parameters for a successful connection.
 
     if ((obj.id_s__adobeconnect_host.value.length == 0) || (obj.id_s__adobeconnect_host.value == '')) {
       return false;
     }
-    
+        
     var queryString = "";
     
     queryString += "serverURL=" + escape(obj.id_s__adobeconnect_host.value);
@@ -20,13 +19,18 @@ alert("high");
     } else {
         queryString += "&authEmaillogin=0";
     }
-    
-    var args = null;
-    args.url = '/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest';
-    args.name = 'Adobe Connect Pro test window';
-    args.options = 'scrollbars=yes,resizable=no,width=640,height=300';
+
+    var myobject =new testwindow('/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest',
+                                'Adobe Connect Pro test window',
+                                'scrollbars=yes,resizable=no,width=640,height=300');
     
     /*return openpopup('onclick', '/mod/adobeconnect/conntest.php?' + queryString, 'connectiontest', 'scrollbars=yes,resizable=no,width=640,height=300');*/
-    alert(args.url);
-    /*return openpopup('onclick', args);*/
+
+    return openpopup('onclick', myobject);
+}
+
+function testwindow(url, name, options) {
+    this.url = url;
+    this.name = name;
+    this.options = options;
 }
