@@ -1,5 +1,5 @@
 <?php // $Id$
-$mod_adobeconnect_capabilities = array(
+$capabilities = array(
     'mod/adobeconnect:meetingpresenter' => array(
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',

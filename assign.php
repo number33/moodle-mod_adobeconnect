@@ -19,23 +19,25 @@
 
     list($context, $course, $cm) = get_context_info_array($contextid);
 
-    $url = new moodle_url('/admin/roles/assign.php', array('contextid' => $contextid,
+    $url = new moodle_url('/mod/adobeconnect/assign.php', array('contextid' => $contextid,
                                                            'groupid' => $groupid,
                                                            'id' => $id,
                                                            'roleid' => $roleid));
 
+    global $DB;
+
     // Print Header
     if ($id) {
         if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
-            error('Course Module ID was incorrect');
+            print_error('Course Module ID was incorrect', 'adobeconnect');
         }
 
-        if (! $course = get_record('course', 'id', $cm->course)) {
-            error('Course is misconfigured');
+        if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
+            print_error('Course is misconfigured', 'adobeconnect');
         }
 
-        if (! $adobeconnect = get_record('adobeconnect', 'id', $cm->instance)) {
-            error('Course module is incorrect');
+        if (! $adobeconnect = $DB->get_record('adobeconnect', array('id' => $cm->instance))) {
+            print_error('Course module is incorrect', 'adobeconnect');
         }
     }
 
@@ -46,6 +48,9 @@
     $PAGE->set_context($context);
 
     list($assignableroles, $assigncounts, $nameswithcounts) = get_assignable_roles($context, ROLENAME_BOTH, true);
+
+    $contextname = print_context_name($context);
+    $inmeta = $course->metacourse;
 
     // Make sure this user can assign this role
     if ($roleid && !isset($assignableroles[$roleid])) {
@@ -170,7 +175,6 @@
         }
     }
 
-
     $PAGE->set_pagelayout('admin');
     $PAGE->set_title($title);
     //$tabfile = $CFG->dirroot.'/'.$CFG->admin.'/roles/tabs.php';
@@ -181,23 +185,14 @@
             break;
         case CONTEXT_USER:
             $tabfile = $CFG->dirroot.'/user/tabs.php';
-            if ($isfrontpage) {
-                $fullname = fullname($user, has_capability('moodle/site:viewfullnames', $context));
-                $PAGE->set_heading($fullname);
-            } else {
-                $PAGE->set_heading($course->fullname);
-            }
+            $PAGE->set_heading($course->fullname);
             $showroles = 1;
             break;
         case CONTEXT_COURSECAT:
             $PAGE->set_heading("$SITE->fullname: ".get_string("categories"));
             break;
         case CONTEXT_COURSE:
-            if ($isfrontpage) {
-                admin_externalpage_setup('frontpageroles', '', array('contextid' => $contextid, 'roleid' => $roleid));
-            } else {
-                $PAGE->set_heading($course->fullname);
-            }
+            $PAGE->set_heading($course->fullname);
             break;
         case CONTEXT_MODULE:
             $PAGE->set_heading(print_context_name($context, false));
@@ -238,16 +233,6 @@
           <td id="buttonscell">
               <div id="addcontrols">
                   <input name="add" id="add" type="submit" value="<?php echo $OUTPUT->larrow().'&nbsp;'.get_string('add'); ?>" title="<?php print_string('add'); ?>" /><br />
-
-                  <?php print_collapsible_region_start('', 'assignoptions', get_string('enrolmentoptions', 'role'),
-                        'assignoptionscollapse', true); ?>
-
-                  <p><label for="extendperiod"><?php print_string('enrolperiod') ?></label><br />
-                  <?php echo html_writer::select($periodmenu, 'extendperiod', $defaultperiod, $unlimitedperiod); ?></p>
-
-                  <p><label for="extendbase"><?php print_string('startingfrom') ?></label><br />
-                  <?php echo html_writer::select($basemenu, 'extendbase', $extendbase, false); ?></p>
-                  <?php print_collapsible_region_end(); ?>
               </div>
 
               <div id="removecontrols">

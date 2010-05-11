@@ -69,7 +69,6 @@ $PAGE->set_url('/mod/adobeconnect/view.php?id='.$id);
 $PAGE->set_pagelayout('base');
 $PAGE->set_title(format_string($adobeconnect->name));
 $PAGE->set_heading(format_string($adobeconnect->name));
-echo $OUTPUT->header();
 
 //echo $OUTPUT->update_module_button($cm->id, 'adobeconnect');
 
@@ -88,6 +87,7 @@ if (0 != $cm->groupmode){
         }
 
         if (empty($groupid)) {
+            echo $OUTPUT->header();
             $groupid = 0;
             notify(get_string('usergrouprequired', 'adobeconnect'));
             print_footer($course);
@@ -209,7 +209,7 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
         $roleid = $DB->get_field('role', 'id', array('shortname' => 'adobeconnectpresenter'));
 
         if (!empty($roleid)) {
-            redirect("assign.php?id=$id&amp;contextid={$context->id}&amp;roleid=$roleid&amp;groupid={$formdata->group}", '', 0);
+            redirect("assign.php?id=$id&contextid={$context->id}&roleid=$roleid&groupid={$formdata->group}", '', 0);
         } else {
             notice("error: error finding adobeconnectpresenter role");
         }
@@ -217,9 +217,12 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
 
     // Edit participants
     if (isset($formdata->viewcontent)) {
-        redirect("viewcontent.php?id=$id&amp;groupid=$groupid", '', 0);
+        redirect("viewcontent.php?id=$id&groupid=$groupid", '', 0);
     }
 }
+
+// Print header
+echo $OUTPUT->header();
 
 if ($cm->groupmode) {
     groups_print_course_menu($course, "view.php?id=$id");
@@ -340,12 +343,12 @@ echo '<div class="aconbtnrow">'."\n";
 
 echo '<div class="aconbtnjoin">'."\n";
 
-$attributes['id'] = $OUTPUT->add_action_handler(new popup_action('click', '/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid));
-print_object($attributes['id']);
-echo $OUTPUT->single_button('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid,
-                            get_string('joinmeeting', 'adobeconnect'), $attributes);
-//echo button_to_popup_window('/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid,
-//                            'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
+$popup_url = '/mod/adobeconnect/join.php?id='.$id.'&amp;sesskey='.$sesskey.'&amp;groupid='.$groupid;
+
+$action = new popup_action('click', $popup_url);
+
+echo $OUTPUT->action_link($popup_url, get_string('joinmeeting', 'adobeconnect'), $action, array('target' => '_blank'));
+
 echo '</div>'."\n";
 
 if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or

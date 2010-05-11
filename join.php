@@ -8,21 +8,21 @@ $id       = required_param('id', PARAM_INT); // course_module ID, or
 $groupid  = required_param('groupid', PARAM_INT);
 $sesskey  = required_param('sesskey', PARAM_ALPHANUM);
 
+global $CFG, $USER, $DB;
+
 if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
     error('Course Module ID was incorrect');
 }
 
-if (! $course = get_record('course', 'id', $cm->course)) {
+if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
     error('Course is misconfigured');
 }
 
-if (! $adobeconnect = get_record('adobeconnect', 'id', $cm->instance)) {
+if (! $adobeconnect = $DB->get_record('adobeconnect', array('id' => $cm->instance))) {
     error('Course module is incorrect');
 }
 
 require_login($course, true, $cm);
-
-global $CFG, $USER;
 
 // Check if the user's email is the Connect Pro user's login
 $usrobj = new stdClass();
@@ -90,8 +90,8 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
     $groupobj = groups_get_group($groupid);
 
     // Get the meeting sco-id
-    $meetingscoid = get_field('adobeconnect_meeting_groups', 'meetingscoid',
-                              'instanceid', $cm->instance, 'groupid', $groupid);
+    $meetingscoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid',
+                              array('instanceid' => $cm->instance, 'groupid' => $groupid));
 
     $aconnect = aconnect_login();
 
