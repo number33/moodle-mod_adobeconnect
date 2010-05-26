@@ -33,7 +33,7 @@ $str = '<center><input type="button" onclick="return adobetestConnection(documen
 
 $settings->add(new admin_setting_heading('adobeconnect_test', '', $str));
 
-$str = '<p>Adobe Systems Inc. and Remote-Learner.net have partnered together to create the first publicly available
+$str = '<center><img src="'.$CFG->wwwroot.'/mod/adobeconnect/pix/rl_logo.png" /></center><br /><p>Adobe Systems Inc. and Remote-Learner.net have partnered together to create the first publicly available
 and officially sponsored, integration method between Moodle and Adobe Acrobat Connect Pro. This new
 integration is designed to simplify the use of synchronous events within Moodle. It provides a
 single-sign-on between the two systems with easy creation and management of Adobe Connect Pro

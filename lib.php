@@ -34,6 +34,7 @@ $adobeconnect_EXAMPLE_CONSTANT = 42;     /// for example
 function adobeconnect_add_instance($adobeconnect) {
 
     global $COURSE, $USER;
+
     $adobeconnect->timecreated = time();
     $return = false;
     $meeting = new stdClass();
@@ -192,7 +193,6 @@ function adobeconnect_add_instance($adobeconnect) {
 //    print_object('---');
 //    print_object($COURSE);
 //    die();
-
 
     return $recid;
 }

@@ -202,10 +202,10 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
 
     // Edit participants
     if (isset($formdata->participants)) {
-//        $context = get_context_instance(CONTEXT_MODULE, $id);
+        $context = get_context_instance(CONTEXT_MODULE, $id);
         // Using course context because we want the assign page to use that context
         // Otherwise the user would have to re-assign users for every activity instance
-        $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        //$context = get_context_instance(CONTEXT_COURSE, $course->id);
 
         $roleid = get_field('role', 'id', 'shortname', 'adobeconnectpresenter');
 
