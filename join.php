@@ -117,21 +117,23 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     // Check the user's capabilities and assign them the Adobe Role
     if (!empty($meetingscoid) and !empty($usrprincipal) and !empty($meeting)) {
-        if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id)) {
-            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PRESENTER, true)) {
+        if (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id, false)) {
+            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_HOST, true)) {
                 //DEBUG
-                // echo 'true';
+//                 echo 'host';
+//                 die();
             } else {
                 //DEBUG
-                print_object('error assign user adobe presenter role');
+                print_object('error assign user adobe host role');
                 print_object($aconnect->_xmlrequest);
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
             }
-        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
+        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id, false)) {
             if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PARTICIPANT, true)) {
                 //DEBUG
-                // echo 'true';
+//                 echo 'participant';
+//                 die();
             } else {
                 //DEBUG
                 print_object('error assign user adobe particpant role');
@@ -139,13 +141,14 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
             }
-        } elseif (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id)) {
-            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_HOST, true)) {
+        } elseif (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id, false)) {
+            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PRESENTER, true)) {
                 //DEBUG
-                // echo 'true';
+//                 echo 'presenter';
+//                 die();
             } else {
                 //DEBUG
-                print_object('error assign user adobe host role');
+                print_object('error assign user adobe presenter role');
                 print_object($aconnect->_xmlrequest);
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
