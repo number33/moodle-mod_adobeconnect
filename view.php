@@ -144,12 +144,45 @@ if (!empty($meetscoids)) {
     $fldid = aconnect_get_folder($aconnect, 'content');
     foreach($meetscoids as $scoid) {
 
+        // May need this later on
         $data = aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid);
 
         if (!empty($data)) {
             $recording[] = $data;
         }
+
+        $data2 = aconnect_get_recordings($aconnect, $scoid->meetingscoid, $scoid->meetingscoid);
+
+        if (!empty($data2)) {
+             $recording[] = $data2;
+        }
 //        print_object(aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid));
+    }
+
+
+    // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when a the
+    // recording settings on ACP server change between publishing the recording links in meeting folders and
+    // not publishing the recording links in meeting folders
+    $names = array();
+    foreach ($recording as $key => $recordingarray) {
+
+        foreach ($recordingarray as $key2 => $record) {
+
+
+            if (!empty($names)) {
+
+                if (!array_search($record->name, $names)) {
+
+                    $names[] = $record->name;
+                } else {
+
+                    unset($recording[$key][$key2]);
+                }
+            } else {
+
+                $names[] = $record->name;
+            }
+        }
     }
 
 
