@@ -43,7 +43,7 @@ print_header_simple($stradobeconnects, '', $navigation, '', '', true, '', navmen
 /// Get all the appropriate data
 
 if (! $adobeconnects = get_all_instances_in_course('adobeconnect', $course)) {
-    notice('There are no instances of adobeconnect', "../../course/view.php?id=$course->id");
+    notice(get_string('noinstances', 'adobeconnect'), "../../course/view.php?id=$course->id");
     die;
 }
 

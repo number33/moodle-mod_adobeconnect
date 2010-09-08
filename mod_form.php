@@ -67,7 +67,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $mform->disabledIf('meeturl', 'tempenable', 'eq', 0);
 
         // Public or private meeting
-        $meetingpublic = array(1 => 'Public', 0 => 'Private');
+        $meetingpublic = array(1 => get_string('public', 'adobeconnect'), 0 => get_string('private', 'adobeconnect'));
         $mform->addElement('select', 'meetingpublic', get_string('meetingtype', 'adobeconnect'), $meetingpublic);
         $mform->setHelpButton('meetingpublic', array('meetingtype', get_string('meetingtype', 'adobeconnect'), 'adobeconnect'));
 

@@ -245,7 +245,7 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
         if (!empty($roleid)) {
             redirect("assign.php?id=$id&amp;contextid={$context->id}&amp;roleid=$roleid&amp;groupid={$formdata->group}", '', 0);
         } else {
-            notice("error: error finding adobeconnectpresenter role");
+            notice(get_string('nopresenterrole', 'adobeconnect'));
         }
     }
 
@@ -269,7 +269,7 @@ $filter = array('filter-sco-id' => $scoid);
 if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
     $meeting = current($meeting);
 } else {
-    notice('No meeting exists on the server', '', $course);
+    notice(get_string('nomeeting', 'adobeconnect'), '', $course);
     aconnect_logout($aconnect);
     die();
 }
@@ -334,6 +334,7 @@ echo '<label for="lblmeetingstarttitle">'.get_string('meetingstart', 'adobeconne
 echo '</div>'."\n";
 
 $time = date("D F, Y", $adobeconnect->starttime);
+$time = userdate($adobeconnect->starttime, "%a %B %d, %G");
 echo '<div class="aconlabeltext" id="aconmeetstarttxt">'."\n";
 echo '<label for="lblmeetingstart">'.$time.'</label><br />'."\n";
 echo '</div>'."\n";
@@ -347,6 +348,7 @@ echo '<label for="lblmeetingendtitle">'.get_string('meetingend', 'adobeconnect')
 echo '</div>'."\n";
 
 $time = date("D F, Y", $adobeconnect->endtime);
+$time = userdate($adobeconnect->endtime, "%a %B %d, %G");
 echo '<div class="aconlabeltext" id="aconmeetendtxt">'."\n";
 echo '<label for="lblmeetingend">'.$time.'</label><br />'."\n";
 echo '</div>'."\n";
@@ -360,7 +362,7 @@ echo '<label for="lblmeetingsummarytitle">'.get_string('meetingintro', 'adobecon
 echo '</div>'."\n";
 
 echo '<div class="aconlabeltext" id="aconmeetsummarytxt">'."\n";
-echo '<label for="lblmeetingsummary">'.$adobeconnect->intro.'</label><br />'."\n";
+echo '<label for="lblmeetingsummary">'. format_string($adobeconnect->intro) .'</label><br />'."\n";
 echo '</div>'."\n";
 
 echo '</div>'."\n";
@@ -427,7 +429,7 @@ if ($showrecordings and !empty($recordings)) {
                 echo '<div class="aconrecordingrow">'."\n";
                 echo '<a href="http://'.$CFG->adobeconnect_meethost.$port
                      .$recording->url.'?session='.$adobesession.
-                     '" target="_blank">'.$recording->name.'</a><br />';
+                     '" target="_blank">'. format_string($recording->name) .'</a><br />';
                 echo '</div>'."\n";
             }
         }

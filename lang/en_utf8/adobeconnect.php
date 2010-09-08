@@ -81,11 +81,19 @@ $string['invalidadobemeeturl'] = 'Invalid entry for this field.  Click the help 
 $string['adobeconnect:meetingpresenter'] = 'Meeting Presenter';
 $string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
 $string['adobeconnect:meetinghost'] = 'Meeting Host';
+$string['public'] = 'Public';
+$string['private'] = 'Private';
 
 // Error codes
 $string['emptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Please inform your Moodle administrator.';
 $string['adminemptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Click continue to proceed to the activity settings page and test the connection';
 $string['notsetupproperty'] = 'The activity module is not properly setup.  Please contact your Moodle administrator';
 $string['adminnotsetupproperty'] = 'The activity module is not properly setup.  Click continue to proceed to the activity settings page and test the connection';
+$string['notparticipant'] = 'You are not a participant for this meeting';
+$string['unableretrdetails'] = 'Unable to retrieve meeting details';
+$string['usernotenrolled'] = 'Only users enrolled and have a role in this course can join this meeting';
+$string['nopresenterrole'] = 'error: error finding adobeconnectpresenter role';
+$string['nomeeting'] = 'No meeting exists on the server';
+$string['noinstances'] = 'There are no instances of adobeconnect';
 
 ?>
