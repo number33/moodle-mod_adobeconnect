@@ -1,28 +1,14 @@
-<?php //$Id$
-
+<?php
 /**
- * This file defines the main adobeconnect configuration form
- * It uses the standard core Moodle (>1.8) formslib. For
- * more info about them, please visit:
- *
- * http://docs.moodle.org/en/Development:lib/formslib.php
- *
- * The form must provide support for, at least these fields:
- *   - name: text element of 64cc max
- *
- * Also, it's usual to use these fields:
- *   - intro: one htmlarea element to describe the activity
- *            (will be showed in the list of activities of
- *             adobeconnect type (index.php) and in the header
- *             of the adobeconnect main page (view.php).
- *   - introformat: The format used to write the contents
- *             of the intro field. It automatically defaults
- *             to HTML when the htmleditor is used and can be
- *             manually selected if the htmleditor is not used
- *             (standard formats are: MOODLE, HTML, PLAIN, MARKDOWN)
- *             See lib/weblib.php Constants and the format_text()
- *             function for more info
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+if (!defined('MOODLE_INTERNAL')) {
+    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
+}
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/adobeconnect/locallib.php');
@@ -40,12 +26,24 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
 
     /// Adding the standard "name" field
         $mform->addElement('text', 'name', get_string('adobeconnectname', 'adobeconnect'), array('size'=>'64'));
-        $mform->setType('name', PARAM_TEXT);
+        if (!empty($CFG->formatstringstriptags)) {
+            $mform->setType('name', PARAM_TEXT);
+        } else {
+            $mform->setType('name', PARAM_CLEANHTML);
+        }
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
     /// Adding the required "intro" field to hold the description of the instance
         $this->add_intro_editor(false, get_string('adobeconnectintro', 'adobeconnect'));
+
+//        $mform->addElement('htmleditor', 'intro', get_string('adobeconnectintro', 'adobeconnect'));
+//        $mform->setType('intro', PARAM_RAW);
+//        $mform->addRule('intro', get_string('required'), 'required', null, 'client');
+//        $mform->setHelpButton('intro', array('writing', 'richtext'), false, 'editorhelpbutton');
+
+    /// Adding "introformat" field
+//        $mform->addElement('format', 'introformat', get_string('format'));
 
 //-------------------------------------------------------------------------------
     /// Adding the rest of adobeconnect settings, spreeading all them into this fieldset
@@ -57,20 +55,23 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $attributes=array('size'=>'20');
         $mform->addElement('text', 'meeturl', get_string('meeturl', 'adobeconnect'), $attributes);
         $mform->setType('meeturl', PARAM_PATH);
-        $mform->setHelpButton('meeturl', array('meeturl', get_string('meeturl', 'adobeconnect'), 'adobeconnect'));
+        $mform->addHelpButton('meeturl', 'meeturl', 'adobeconnect');
+//        $mform->addHelpButton('meeturl', array('meeturl', get_string('meeturl', 'adobeconnect'), 'adobeconnect'));
         $mform->disabledIf('meeturl', 'tempenable', 'eq', 0);
 
         // Public or private meeting
-        $meetingpublic = array(1 => 'Public', 0 => 'Private');
+        $meetingpublic = array(1 => get_string('public', 'adobeconnect'), 0 => get_string('private', 'adobeconnect'));
         $mform->addElement('select', 'meetingpublic', get_string('meetingtype', 'adobeconnect'), $meetingpublic);
-        $mform->setHelpButton('meetingpublic', array('meetingtype', get_string('meetingtype', 'adobeconnect'), 'adobeconnect'));
+        $mform->addHelpButton('meetingpublic', 'meetingtype', 'adobeconnect');
+//        $mform->addHelpButton('meetingpublic', array('meetingtype', get_string('meetingtype', 'adobeconnect'), 'adobeconnect'));
 
         // Meeting Template
         $templates = array();
         $templates = $this->get_templates();
         ksort($templates);
         $mform->addElement('select', 'templatescoid', get_string('meettemplates', 'adobeconnect'), $templates);
-        $mform->setHelpButton('templatescoid', array('templatescoid', get_string('meettemplates', 'adobeconnect'), 'adobeconnect'));
+        $mform->addHelpButton('templatescoid', 'meettemplates', 'adobeconnect');
+//        $mform->addHelpButton('templatescoid', array('templatescoid', get_string('meettemplates', 'adobeconnect'), 'adobeconnect'));
         $mform->disabledIf('templatescoid', 'tempenable', 'eq', 0);
 
 
@@ -98,9 +99,12 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         global $CFG, $DB;
 
         if (array_key_exists('update', $default_values)) {
-            $sql = "SELECT id FROM {$CFG->prefix}adobeconnect_meeting_groups WHERE ".
-                   "instanceid = " . $default_values['id'];
-            if ($DB->record_exists_sql($sql)) {
+
+            $params = array('instanceid' => $default_values['id']);
+            $sql = "SELECT id FROM {adobeconnect_meeting_groups} WHERE ".
+                   "instanceid = :instanceid";
+
+            if ($DB->record_exists_sql($sql, $params)) {
                 $default_values['tempenable'] = 0;
             }
         }
@@ -157,62 +161,34 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
             }
 
             // Check for local activities with the same name
-            $param = array('name' => $data['name']);
-            if ($DB->record_exists('adobeconnect', $param)) {
+            $params = array('name' => $data['name']);
+            if ($DB->record_exists('adobeconnect', $params)) {
                 $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                 return $errors;
             }
 
             // Check Adobe connect server for duplicated names
             foreach($namematches as $matchkey => $match) {
-                //if group mode is disabled
-                if (0 == $data['groupmode']) {
-
-                    // Check if the lengths are the same
-                    if (strlen($data['name']) == strlen($match->name)) {
-
-                        if (0 == substr_compare($match->name, $data['name'], 0, strlen($data['name']), false)) {
-                            $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
-                        }
-                    }
-                } else {
-
-                    // else do a regular check to see if the names are the same
-                    if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
-                        $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
-                    }
+                if (0 == substr_compare($match->name, $data['name'] . '_', 0, strlen($data['name'] . '_'), false)) {
+                    $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                 }
-
             }
 
             foreach($urlmatches as $matchkey => $match) {
                 $matchurl = rtrim($match->url, '/');
-
-                //if group mode is disabled
-                if (0 == $data['groupmode']) {
-
-                    // Check if the lengths are the same
-                    if (strlen($matchurl) == strlen($url)) {
-                        if (0 == substr_compare($matchurl, $url, 0, strlen($url), false)) {
-                            $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
-                        }
-
-                    }
-                } else {
-
-                    if (0 == substr_compare($matchurl, $url . '_', 0, strlen($url . '_'), false)) {
-                        $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
-                    }
+                if (0 == substr_compare($matchurl, $url . '_', 0, strlen($url . '_'), false)) {
+                    $errors['meeturl'] = get_string('duplicateurl', 'adobeconnect');
                 }
-
             }
 
         } else {
             // Updating activity
             // Look for existing meeting names, excluding this activity's group meeting(s)
-            $sql = "SELECT meetingscoid, groupid FROM {$CFG->prefix}adobeconnect_meeting_groups ".
-                   " WHERE instanceid = ". $data['instance'];
-            $grpmeetings = $DB->get_records_sql($sql);
+            $params = array('instanceid' => $data['instance']);
+            $sql = "SELECT meetingscoid, groupid FROM {adobeconnect_meeting_groups} ".
+                   " WHERE instanceid = :instanceid";
+
+            $grpmeetings = $DB->get_records_sql($sql, $params);
 
             if (empty($grpmeetings)) {
                 $grpmeetings = array();
@@ -257,5 +233,3 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     }
 
 }
-
-?>

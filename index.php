@@ -1,27 +1,30 @@
-<?php // $Id$
+<?php
 
 /**
- * This page lists all the instances of adobeconnect in a particular course
- *
- * @author  Your Name Akinsaya Delamarre (adelamarre@remote-learner.net)
- * @version $Id$
- * @package mod/adobeconnect
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/// Replace adobeconnect with the name of your module and remove this line
+
+// Not sure if this page is needed anymore
+
+/**
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 
 $id = required_param('id', PARAM_INT);   // course
 
-if (! $course = get_record('course', 'id', $id)) {
+global $USER, $DB;
+
+$params = array('id' => $id);
+if (! $course = $DB->get_record('course', $params)) {
     error('Course ID is incorrect');
 }
 
 require_course_login($course);
-
-global $USER;
 
 add_to_log($course->id, 'adobeconnect', 'view all', "index.php?id=$course->id", '');
 
@@ -43,7 +46,7 @@ print_header_simple($stradobeconnects, '', $navigation, '', '', true, '', navmen
 /// Get all the appropriate data
 
 if (! $adobeconnects = get_all_instances_in_course('adobeconnect', $course)) {
-    notice('There are no instances of adobeconnect', "../../course/view.php?id=$course->id");
+    notice(get_string('noinstances', 'adobeconnect'), "../../course/view.php?id=$course->id");
     die;
 }
 
@@ -103,3 +106,4 @@ print_table($table);
 print_footer($course);
 
 ?>
+*/

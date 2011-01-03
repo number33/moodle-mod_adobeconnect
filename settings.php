@@ -1,62 +1,61 @@
-<?php // $Id$
+<?php
+/**
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die;
+
 global $PAGE;
-require_once($CFG->dirroot . '/mod/adobeconnect/locallib.php');
-$PAGE->requires->js('/mod/adobeconnect/testserverconnection.js');
-
-$settings->add(new admin_setting_configtext('adobeconnect_host', get_string('host', 'adobeconnect'),
-                   get_string('host_desc', 'adobeconnect'), 'localhost/api/xml', PARAM_URL));
-
-$settings->add(new admin_setting_configtext('adobeconnect_meethost', get_string('meetinghost', 'adobeconnect'),
-                   get_string('meethost_desc', 'adobeconnect'), 'localhost', PARAM_URL));
-
-$settings->add(new admin_setting_configtext('adobeconnect_port', get_string('port', 'adobeconnect'),
-                   get_string('port_desc', 'adobeconnect'), '80', PARAM_INT));
-
-$settings->add(new admin_setting_configtext('adobeconnect_admin_login', get_string('admin_login', 'adobeconnect'),
-                   get_string('admin_login_desc', 'adobeconnect'), 'admin', PARAM_TEXT));
-
-$settings->add(new admin_setting_configpasswordunmask('adobeconnect_admin_password', get_string('admin_password', 'adobeconnect'),
-                   get_string('admin_password_desc', 'adobeconnect'), ''));
-
-$settings->add(new admin_setting_configtext('adobeconnect_admin_httpauth', get_string('admin_httpauth', 'adobeconnect'),
-                   get_string('admin_httpauth_desc', 'adobeconnect'), 'my-user-id', PARAM_TEXT));
-
-$settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
-                   get_string('email_login_desc', 'adobeconnect'), '0'));
 
 
-//$settings->add(new admin_setting_configcheckbox('adobeconnect_record_force', get_string('record_force', 'adobeconnect'),
-//                   get_string('record_force_desc', 'adobeconnect'), '0'));
-//
+//$PAGE->requires->js('/mod/adobeconnect/adobeconnect.js', true);
 
-$str = '<center><input type="button" onclick="return adobetestConnection(document.getElementById(\'adminsettings\'));" value="'.
-       get_string('testconnection', 'adobeconnect') . '" /></center>';
+if ($ADMIN->fulltree) {
+//print_object($ADMIN);
 
-$settings->add(new admin_setting_heading('adobeconnect_test', '', $str));
+    require_once($CFG->dirroot . '/mod/adobeconnect/locallib.php');
+$PAGE->requires->js_init_call('M.mod_adobeconnect.init');
 
-$str = '<p>Adobe Systems Inc. and Remote-Learner.net have partnered together to create the first publicly available
-and officially sponsored, integration method between Moodle and Adobe Acrobat Connect Pro. This new
-integration is designed to simplify the use of synchronous events within Moodle. It provides a
-single-sign-on between the two systems with easy creation and management of Adobe Connect Pro
-meetings.
+//$data = get_data();
 
-<!--
-</p>
-<p>About Adobe Connect Pro
-For more information about Adobe Connect Pro visit http:// (justin williams is getting a landing URL for here ping him)
-</p>
--->
+    //require_js($CFG->wwwroot . '/mod/adobeconnect/testserverconnection.js');
 
-<p>
-About Remote-Learner
-Remote-Learner has been providing educational technologies services since 1982 to its business,
-educational and governmental clients. Today, these services include support for best-of-breed
-open source programs. Remote-Learner is an official Moodle partner, JasperSoft partner and
-Alfresco partner. The company offers SaaS hosting services, IT support contracts, custom
-programming, workforce development training, instructional design and strategic consulting
-services for organizations planning online learning programs.</p>
+    $settings->add(new admin_setting_configtext('adobeconnect_host', get_string('host', 'adobeconnect'),
+                       get_string('host_desc', 'adobeconnect'), 'localhost/api/xml', PARAM_URL));
 
-<p>Visit http://remote-learner.net/adobeconnectpro for information on Enterprise support</p>';
+    $settings->add(new admin_setting_configtext('adobeconnect_meethost', get_string('meetinghost', 'adobeconnect'),
+                       get_string('meethost_desc', 'adobeconnect'), 'localhost', PARAM_URL));
 
-$settings->add(new admin_setting_heading('adobeconnect_intro', '', $str));
-?>
+    $settings->add(new admin_setting_configtext('adobeconnect_port', get_string('port', 'adobeconnect'),
+                       get_string('port_desc', 'adobeconnect'), '80', PARAM_INT));
+
+    $settings->add(new admin_setting_configtext('adobeconnect_admin_login', get_string('admin_login', 'adobeconnect'),
+                       get_string('admin_login_desc', 'adobeconnect'), 'admin', PARAM_TEXT));
+
+    $settings->add(new admin_setting_configpasswordunmask('adobeconnect_admin_password', get_string('admin_password', 'adobeconnect'),
+                       get_string('admin_password_desc', 'adobeconnect'), ''));
+
+    $settings->add(new admin_setting_configtext('adobeconnect_admin_httpauth', get_string('admin_httpauth', 'adobeconnect'),
+                       get_string('admin_httpauth_desc', 'adobeconnect'), 'my-user-id', PARAM_TEXT));
+
+    $settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
+                       get_string('email_login_desc', 'adobeconnect'), '0'));
+
+
+    $url = $CFG->wwwroot . '/mod/adobeconnect/conntest.php';
+    $url = htmlentities($url);
+    $options = 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width=700,height=300';
+    $str = '<center><input type="button" onclick="window.open(\''.$url.'\', \'\', \''.$options.'\');" value="'.
+           get_string('testconnection', 'adobeconnect') . '" /></center>';
+
+    $settings->add(new admin_setting_heading('adobeconnect_test', '', $str));
+
+    $param = new stdClass();
+    $param->image = $CFG->wwwroot.'/mod/adobeconnect/pix/rl_logo.png';
+    $param->url = 'http://remote-learner.net/adobeconnectpro';
+
+    $settings->add(new admin_setting_heading('adobeconnect_intro', '', get_string('settingblurb', 'adobeconnect', $param)));
+}

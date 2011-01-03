@@ -1,156 +1,128 @@
-<?php // $Id$
+<?php
+// This file replaces:
+//   * STATEMENTS section in db/install.xml
+//   * lib.php/modulename_install() post installation hook
+//   * partially defaults.php
+
 /**
- * This file replaces:
- *   * STATEMENTS section in db/install.xml
- *   * lib.php/modulename_install() post installation hook
- *   * partially defaults.php
- *
- * @package   adobeconnect
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 o
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 function xmldb_adobeconnect_install() {
     global $DB;
 
+    // The commented out code is waiting for a fix for MDL-25709
     $result = true;
     $timenow = time();
     $sysctx  = get_context_instance(CONTEXT_SYSTEM);
+    $mrole = new stdClass();
+    $levels = array(CONTEXT_COURSECAT, CONTEXT_COURSE, CONTEXT_MODULE);
 
-//    $adminrid          = get_field('role', 'id', 'shortname', 'admin');
-    $param = array('shortname' => 'coursecreator');
-    $coursecreatorrid  = $DB->get_field('role', 'id', $param);
+    $param = array('shortname' =>'coursecreator');
+    $coursecreatorrid  = $DB->get_record('role', $param);
 
-    $param = array('shortname' => 'editingteacher');
-    $editingteacherrid = $DB->get_field('role', 'id', $param);
+    $param = array('shortname' =>'editingteacher');
+    $editingteacherrid = $DB->get_record('role', $param);
 
-    $param = array('shortname' => 'teacher');
-    $teacherrid        = $DB->get_field('role', 'id', $param);
+    $param = array('shortname' =>'teacher');
+    $teacherrid        = $DB->get_record('role', $param);
 
 /// Fully setup the Adobe Connect Presenter role.
     $param = array('shortname' => 'adobeconnectpresenter');
-    if ($result && !$mrole = $DB->get_record('role', $param)) {
+    if (!$mrole = $DB->get_record('role', $param)) {
+
         if ($rid = create_role(get_string('adobeconnectpresenter', 'adobeconnect'), 'adobeconnectpresenter',
-                               get_string('adobeconnectpresenterdescription', 'adobeconnect'))) {
+                               get_string('adobeconnectpresenterdescription', 'adobeconnect'), 'adobeconnectpresenter')) {
 
-            $param = array('id' => $rid);
-            $mrole  = $DB->get_record('role', $param);
-            $result = $result && assign_capability('mod/adobeconnect:meetingpresenter', CAP_ALLOW, $mrole->id, $sysctx->id);
+            $mrole->id = $rid;
+            $result = /*$result && */assign_capability('mod/adobeconnect:meetingpresenter', CAP_ALLOW, $mrole->id, $sysctx->id);
 
-            // Set role context level to course
-            set_role_contextlevels($mrole->id, array(CONTEXT_COURSE, CONTEXT_MODULE));
+            set_role_contextlevels($mrole->id, $levels);
         } else {
             $result = false;
-
         }
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $coursecreatorrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($coursecreatorrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $coursecreatorrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($coursecreatorrid->id, $mrole->id);
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $editingteacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($editingteacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $editingteacherrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($editingteacherrid->id, $mrole->id);
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $teacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($teacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $teacherrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($teacherrid->id, $mrole->id);
     }
-
 
 /// Fully setup the Adobe Connect Participant role.
     $param = array('shortname' => 'adobeconnectparticipant');
-    if ($result && !$mrole = $DB->get_record('role', $param)) {
-        if ($rid = create_role(get_string('adobeconnectparticipant', 'adobeconnect'), 'adobeconnectparticipant',
-                               get_string('adobeconnectparticipantdescription', 'adobeconnect'))) {
-            $param = array('id' => $rid);
-            $mrole  = $DB->get_record('role', $param);
-            $result = $result && assign_capability('mod/adobeconnect:meetingparticipant', CAP_ALLOW, $mrole->id, $sysctx->id);
 
-            // Set role context level to course
-            set_role_contextlevels($mrole->id, array(CONTEXT_COURSE, CONTEXT_MODULE));
+    if (/*$result && */!($mrole = $DB->get_record('role', $param))) {
+
+        if ($rid = create_role(get_string('adobeconnectparticipant', 'adobeconnect'), 'adobeconnectparticipant',
+                               get_string('adobeconnectparticipantdescription', 'adobeconnect'), 'adobeconnectparticipant')) {
+
+
+            $mrole->id  = $rid;
+            $result = /*$result && */assign_capability('mod/adobeconnect:meetingparticipant', CAP_ALLOW, $mrole->id, $sysctx->id);
+            set_role_contextlevels($mrole->id, $levels);
         } else {
             $result = false;
         }
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $coursecreatorrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($coursecreatorrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $coursecreatorrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($coursecreatorrid->id, $mrole->id);
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $editingteacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($editingteacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $editingteacherrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($editingteacherrid->id, $mrole->id);
     }
 
-
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $teacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($teacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $teacherrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($teacherrid->id, $mrole->id);
     }
 
 
 /// Fully setup the Adobe Connect Host role.
     $param = array('shortname' => 'adobeconnecthost');
-    if ($result && !$mrole = $DB->get_record('role', $param)) {
+    if (/*$result && */!$mrole = $DB->get_record('role', $param)) {
         if ($rid = create_role(get_string('adobeconnecthost', 'adobeconnect'), 'adobeconnecthost',
-                               get_string('adobeconnecthostdescription', 'adobeconnect'))) {
+                               get_string('adobeconnecthostdescription', 'adobeconnect'), 'adobeconnecthost')) {
 
-            $param = array('id' => $rid);
-            $mrole  = $DB->get_record('role', $param);
-            $result = $result && assign_capability('mod/adobeconnect:meetinghost', CAP_ALLOW, $mrole->id, $sysctx->id);
-
-            // Set role context level to course
-            set_role_contextlevels($mrole->id, array(CONTEXT_COURSE, CONTEXT_MODULE));
-
+            $mrole->id  = $rid;
+            $result = /*$result && */assign_capability('mod/adobeconnect:meetinghost', CAP_ALLOW, $mrole->id, $sysctx->id);
+            set_role_contextlevels($mrole->id, $levels);
         } else {
             $result = false;
         }
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $coursecreatorrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($coursecreatorrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $coursecreatorrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($coursecreatorrid->id, $mrole->id);
     }
 
-
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $editingteacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($editingteacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $editingteacherrid->id);
+    if (!$DB->get_record('role_allow_assign', $param)) {
+        $result = /*$result && */allow_assign($editingteacherrid->id, $mrole->id);
     }
 
-    $param = array('allowassign' => $mrole->id,
-                   'roleid' => $teacherrid);
-    if (!$DB->get_field('role_allow_assign', 'id', $param)) {
-        // role_assign doesn't return anything May 10th
-        allow_assign($teacherrid, $mrole->id);
+    $param = array('allowassign' => $mrole->id, 'roleid' => $teacherrid->id);
+    if (!$DB->get_record('role_allow_assign',$param)) {
+        $result = /*$result && */allow_assign($teacherrid->id, $mrole->id);
     }
-
-/// Install logging support
-    update_log_display_entry('adobeconnect', 'add', 'adobeconnect', 'name');
-    update_log_display_entry('adobeconnect', 'update', 'adobeconnect', 'name');
-    update_log_display_entry('adobeconnect', 'view', 'adobeconnect', 'name');
 
     return $result;
+
 }
-?>

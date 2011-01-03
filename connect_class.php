@@ -7,6 +7,12 @@
  * to access the Adobe Connect API
  */
 
+/**
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class connect_class {
     var $_serverurl;
     var $_serverport;
@@ -323,5 +329,3 @@ class connect_class {
 
     }
 }
-
-?>

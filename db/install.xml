@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="adobeconnect" COMMENT="Default comment for adobeconnect, please edit me" NEXT="adobeconnect_meeting_groups">
+    <TABLE NAME="adobeconnect" COMMENT="adobeconnect Moodle module table" NEXT="adobeconnect_meeting_groups">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="course"/>
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" COMMENT="Course adobeconnect activity belongs to" PREVIOUS="id" NEXT="name"/>

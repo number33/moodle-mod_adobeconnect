@@ -1,4 +1,12 @@
-<?php // $Id$
+<?php
+
+/**
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 
 require_once('connect_class.php');
 
@@ -135,4 +143,3 @@ class connect_class_dom extends connect_class {
         $this->create_request($params, false);
     }
 }
-?>

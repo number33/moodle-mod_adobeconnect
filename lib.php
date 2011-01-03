@@ -1,10 +1,12 @@
 <?php  // $Id$
+/**
+ * @package mod
+ * @subpackage adobeconnect
+ * @author Akinsaya Delamarre (adelamarre@remote-learner.net)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require_once('locallib.php');
-/** Require {@link eventslib.php} */
-require_once($CFG->libdir . '/eventslib.php');
-/** Require {@link calendar/lib.php} */
-require_once($CFG->dirroot . '/calendar/lib.php');
 
 /**
  * Library of functions and constants for module adobeconnect
@@ -21,11 +23,24 @@ require_once($CFG->dirroot . '/calendar/lib.php');
  *     actions across all modules.
  */
 
-defined('MOODLE_INTERNAL') || die();
+$adobeconnect_EXAMPLE_CONSTANT = 42;
+
+/** Include eventslib.php */
+require_once($CFG->libdir.'/eventslib.php');
+/** Include calendar/lib.php */
+require_once($CFG->dirroot.'/calendar/lib.php');
+
 
 /**
+ * @uses FEATURE_GROUPS
+ * @uses FEATURE_GROUPINGS
+ * @uses FEATURE_GROUPMEMBERSONLY
+ * @uses FEATURE_MOD_INTRO
+ * @uses FEATURE_COMPLETION_TRACKS_VIEWS
+ * @uses FEATURE_GRADE_HAS_GRADE
+ * @uses FEATURE_GRADE_OUTCOMES
  * @param string $feature FEATURE_xx constant for requested feature
- * @return mixed True if module supports feature, null if doesn't know
+ * @return mixed True if module supports feature, false if not, null if doesn't know
  */
 function adobeconnect_supports($feature) {
     switch($feature) {
@@ -36,6 +51,7 @@ function adobeconnect_supports($feature) {
         case FEATURE_COMPLETION_TRACKS_VIEWS: return false;
         case FEATURE_GRADE_HAS_GRADE:         return false;
         case FEATURE_GRADE_OUTCOMES:          return false;
+        case FEATURE_BACKUP_MOODLE2:          return true;
 
         default: return null;
     }
@@ -51,7 +67,6 @@ function adobeconnect_supports($feature) {
  * @return int The id of the newly inserted adobeconnect record
  */
 function adobeconnect_add_instance($adobeconnect) {
-
     global $COURSE, $USER, $DB;
 
     $adobeconnect->timecreated = time();
@@ -61,10 +76,12 @@ function adobeconnect_add_instance($adobeconnect) {
     // Assign the current user with the Adobe Presenter role
     $context = get_context_instance(CONTEXT_COURSE, $adobeconnect->course);
 
-    if (!has_capability('mod/adobeconnect:meetinghost', $context, $USER->id)) {
-        $roleid = get_field('role', 'id', 'shortname', 'adobeconnecthost');
+    if (!has_capability('mod/adobeconnect:meetinghost', $context, $USER->id, false)) {
 
-        if (role_assign($roleid, $USER->id, 0, $context->id)) {
+        $param = array('shortname' => 'adobeconnecthost');
+        $roleid = $DB->get_field('role', 'id', $param);
+
+        if (role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect')) {
             //DEBUG
         } else {
             echo 'role assignment failed'; die();
@@ -88,19 +105,22 @@ function adobeconnect_add_instance($adobeconnect) {
         $crsgroups = groups_get_all_groups($COURSE->id);
 
         if (empty($crsgroups)) {
-            return;
+            return 0;
         }
 
+        require_once(dirname(dirname(dirname(__FILE__))).'/group/lib.php');
         // Create the meeting for each group
         foreach($crsgroups as $crsgroup) {
 
             // The teacher role if they don't already have one and
             // Assign them to each group
             if (!groups_is_member($crsgroup->id, $USER->id)) {
-                $roleid = get_field('role', 'id', 'shortname', 'editingteacher');
+
+                $param = array('shortname' => 'editingteacher');
+                $roleid = $DB->get_field('role', 'id', $param);
 
                 if (!user_has_role_assignment($USER->id, $roleid, $context->id)) {
-                    role_assign($roleid, $USER->id, 0, $context->id);
+                    role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect');
                 }
 
                 groups_add_member($crsgroup->id, $USER->id);
@@ -122,6 +142,7 @@ function adobeconnect_add_instance($adobeconnect) {
                 aconnect_update_meeting_perm($aconnect, $meetingscoid, ADOBE_MEETPERM_PUBLIC);
             }
 
+
             // Insert record to activity instance in meeting_groups table
             $record = new stdClass;
             $record->instanceid = $recid;
@@ -134,12 +155,12 @@ function adobeconnect_add_instance($adobeconnect) {
             $event = new stdClass();
 
             $event->name = $meeting->name;
-            $event->description = empty($adobeconnect->intro) ? '.' : $adobeconnect->intro;
+            $event->description = format_module_intro('adobeconnect', $adobeconnect, $adobeconnect->coursemodule);
             $event->courseid = $adobeconnect->course;
             $event->groupid = $crsgroup->id;
             $event->userid = 0;
             $event->instance = $recid;
-            $event->eventtype = 'course';
+            $event->eventtype = 'group';
             $event->timestart = $adobeconnect->starttime;
             $event->timeduration = $adobeconnect->endtime - $adobeconnect->starttime;
             $event->visible = 1;
@@ -171,7 +192,7 @@ function adobeconnect_add_instance($adobeconnect) {
         $event = new stdClass();
 
         $event->name = $meeting->name;
-        $event->description = empty($adobeconnect->intro) ? '.' : $adobeconnect->intro;
+        $event->description = format_module_intro('adobeconnect', $adobeconnect, $adobeconnect->coursemodule);
         $event->courseid = $adobeconnect->course;
         $event->groupid = 0;
         $event->userid = 0;
@@ -203,14 +224,6 @@ function adobeconnect_add_instance($adobeconnect) {
     }
 
     aconnect_logout($aconnect);
-//    $crsgroups = groups_get_course_group($COURSE);
-//    print_object($adobeconnect);
-//    print_object('---');
-//    print_object($crsgroups);
-//    print_object('---');
-//    print_object($COURSE);
-//    die();
-
 
     return $recid;
 }
@@ -224,7 +237,6 @@ function adobeconnect_add_instance($adobeconnect) {
  * @param object $adobeconnect An object from the form in mod_form.php
  * @return boolean Success/Fail
  */
- /**TODO: change the rest of the DML methods **/
 function adobeconnect_update_instance($adobeconnect) {
     global $DB;
 
@@ -340,38 +352,35 @@ function adobeconnect_update_instance($adobeconnect) {
             }
 
             // Update calendar event
-            $params = array('courseid' => $adobeconnect->course,
-                            'instance' => $adobeconnect->id,
-                            'groupid' => $grpmeeting->groupid);
-            $eventid = $DB->get_field('event', 'id', $params);
+            $param = array('courseid' => $adobeconnect->course, 'instance' =>
+                           $adobeconnect->id, 'groupid' => $grpmeeting->groupid,
+                           'modulename' => 'adobeconnect');
+
+            $eventid = $DB->get_field('event', 'id', $param);
 
             if (!empty($eventid)) {
+
                 $event = new stdClass();
                 $event->id = $eventid;
                 $event->name = $meetingobj->name;
-                $event->description = empty($adobeconnect->intro) ? '.' : $adobeconnect->intro;
-                $event->format = 1;
+                $event->description = format_module_intro('adobeconnect', $adobeconnect, $adobeconnect->coursemodule);
                 $event->courseid = $adobeconnect->course;
                 $event->groupid = $grpmeeting->groupid;
                 $event->userid = 0;
                 $event->instance = $adobeconnect->id;
-                $event->eventtype = '';
+                $event->eventtype = 0 == $grpmeeting->groupid ? 'course' : 'group';
                 $event->timestart = $adobeconnect->starttime;
                 $event->timeduration = $adobeconnect->endtime - $adobeconnect->starttime;
                 $event->visible = 1;
                 $event->modulename = 'adobeconnect';
 
-                update_event($event);
+                $calendarevent = calendar_event::load($eventid);
+                $calendarevent->update($event);
             }
         }
     }
 
-
-
     aconnect_logout($aconnect);
-
-    $adobeconnect->intro = $adobeconnect->introeditor['text'];
-    unset($adobeconnect->introeditor);
 
     return $DB->update_record('adobeconnect', $adobeconnect);
 }
@@ -403,13 +412,13 @@ function adobeconnect_delete_instance($id) {
         $aconnect = aconnect_login();
         foreach ($adbmeetings as $meeting) {
             // Update calendar event
-            $param = array('courseid' => $adobeconnect->course,
-                           'instance' => $adobeconnect->id,
-                           'groupid' => $meeting->groupid);
+            $param = array('courseid' => $adobeconnect->course, 'instance' => $adobeconnect->id,
+                           'groupid' => $meeting->groupid, 'modulename' => 'adobeconnect');
             $eventid = $DB->get_field('event', 'id', $param);
 
             if (!empty($eventid)) {
-                delete_event($eventid);
+                $event = calendar_event::load($eventid);
+                $event->delete();
             }
 
             aconnect_remove_meeting($aconnect, $meeting->meetingscoid);
@@ -418,12 +427,11 @@ function adobeconnect_delete_instance($id) {
         aconnect_logout($aconnect);
     }
 
-    $firstparam = array('id' => $adobeconnect->id);
-    $secondparam = array('instanceid' => $adobeconnect->id);
-    if (! $DB->delete_records('adobeconnect', $firstparam) and
-        ! $DB->delete_records('adobeconnect_meeting_groups', $secondparam)) {
-        $result = false;
-    }
+    $param = array('id' => $adobeconnect->id);
+    $result &= $DB->delete_records('adobeconnect', $param);
+
+    $param = array('instanceid' => $adobeconnect->id);
+    $result &= $DB->delete_records('adobeconnect_meeting_groups', $param);
 
     return $result;
 }
@@ -528,7 +536,10 @@ function adobeconnect_scale_used($adobeconnectid, $scaleid) {
  * @return boolean True if the scale is used by any adobeconnect
  */
 function adobeconnect_scale_used_anywhere($scaleid) {
-    if ($scaleid and record_exists('adobeconnect', 'grade', -$scaleid)) {
+    global $DB;
+
+    $param = array('grade' => $scaleid);
+    if ($scaleid and $DB->record_exists('adobeconnect', $param)) {
         return true;
     } else {
         return false;
