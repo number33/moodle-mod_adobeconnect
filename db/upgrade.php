@@ -35,6 +35,7 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
 
     /// Define field introformat to be added to survey
         $table = new xmldb_table('adobeconnect');
+        $field = new xmldb_field('introformat', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'intro');
 
     /// Conditionally launch add field introformat
         if (!$dbman->field_exists($table, $field)) {
@@ -47,7 +48,7 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
             foreach ($rs as $s) {
                 $s->intro       = text_to_html($s->intro, false, false, true);
                 $s->introformat = FORMAT_HTML;
-                $DB->update_record('survey', $s);
+                $DB->update_record('adobeconnect', $s);
                 upgrade_set_timeout();
             }
             $rs->close();
