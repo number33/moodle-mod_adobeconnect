@@ -23,6 +23,9 @@ $settings->add(new admin_setting_configtext('adobeconnect_admin_httpauth', get_s
 $settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
                    get_string('email_login_desc', 'adobeconnect'), '0'));
 
+$settings->add(new admin_setting_configcheckbox('adobeconnect_https', get_string('https', 'adobeconnect'),
+                   get_string('https_desc', 'adobeconnect'), '0'));
+
 
 //$settings->add(new admin_setting_configcheckbox('adobeconnect_record_force', get_string('record_force', 'adobeconnect'),
 //                   get_string('record_force_desc', 'adobeconnect'), '0'));

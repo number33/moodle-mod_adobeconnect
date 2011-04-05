@@ -4,8 +4,10 @@ require_once('connect_class.php');
 
 class connect_class_dom extends connect_class {
 
-    public function __construct($serverurl = '', $serverport = '', $username = '', $password = '', $cookie = '') {
-        parent::__construct($serverurl, $serverport, $username, $password, $cookie);
+    public function __construct($serverurl = '', $serverport = '',
+                                $username = '', $password = '',
+                                $cookie = '', $https) {
+        parent::__construct($serverurl, $serverport, $username, $password, $cookie, $https);
     }
 
     public function create_request($params = array(), $sentrequest = true) {

@@ -226,8 +226,15 @@ if (!empty($meetscoids)) {
 // Log in the current user
 $login = $usrobj->username;
 $password  = $usrobj->username;
+$https = false;
 
-$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
+if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+    $https = true;
+}
+
+
+$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
+                                  '', '', '', $https);
 $aconnect->request_http_header_login(1, $login);
 $adobesession = $aconnect->get_cookie();
 
@@ -422,13 +429,19 @@ if ($showrecordings and !empty($recordings)) {
     echo '<fieldset>'."\n";
     echo '<legend>'.get_string('recordinghdr', 'adobeconnect').'</legend>'."\n";
 
+    $protocol = 'http://';
+
+    if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+        $protocol = 'https://';
+    }
+
     echo '<div class="aconrecording">'."\n";
     foreach ($recordings as $key => $recordinggrp) {
         if (!empty($recordinggrp)) {
             foreach($recordinggrp as $recording) {
                 echo '<div class="aconrecordingrow">'."\n";
-                echo '<a href="http://'.$CFG->adobeconnect_meethost.$port
-                     .$recording->url.'?session='.$adobesession.
+                echo '<a href="'.$protocol . $CFG->adobeconnect_meethost . $port
+                     . $recording->url . '?session=' . $adobesession.
                      '" target="_blank">'. format_string($recording->name) .'</a><br />';
                 echo '</div>'."\n";
             }

@@ -176,9 +176,18 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         notice(get_string('notparticipant', 'adobeconnect'));
     } else {
 
+        $protocol = 'http://';
+        $https = false;
         $login = $usrobj->username;
 
-        $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
+        if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+
+            $protocol = 'https://';
+            $https = true;
+        }
+
+        $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
+                                          '', '', '', $https);
         $aconnect->request_http_header_login(1, $login);
 
         // Include the port number only if it is a port other than 80
@@ -188,7 +197,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
             $port = ':' . $CFG->adobeconnect_port;
         }
 
-        redirect('http://' . $CFG->adobeconnect_meethost . $port
+        redirect($protocol . $CFG->adobeconnect_meethost . $port
                  . $meeting->url
                  . '?session=' . $aconnect->get_cookie());
     }

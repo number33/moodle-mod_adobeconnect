@@ -17,13 +17,17 @@ class connect_class {
     var $_xmlresponse;
     var $_apicall;
     var $_connection;
+    var $_https;
 
-    public function __construct($serverurl = '', $serverport = 80, $username = '', $password = '', $cookie = '') {
+    public function __construct($serverurl = '', $serverport = 80,
+                                $username = '', $password = '',
+                                $cookie = '', $https = false) {
         $this->_serverurl = $serverurl;
         $this->_serverport = $serverport;
         $this->_username = $username;
         $this->_password = $password;
         $this->_cookie = $cookie;
+        $this->_https = $https;
     }
 
     /**
@@ -57,6 +61,10 @@ class connect_class {
         $this->_connection = $connection;
     }
 
+    public function set_https($https = false) {
+        $this->_https = $https;
+    }
+
     public function get_serverurl() {
         return $this->_serverurl;
     }
@@ -81,8 +89,31 @@ class connect_class {
         return $this->_serverport;
     }
 
+    public function get_https() {
+        return $this->_https;
+    }
+
     private function get_deafult_header() {
         return array('Content-Type: text/xml');
+    }
+
+    /**
+     * Adds or replaces http:// with https:// for secured connections
+     * @return string - server URL with the HTTPS protocol
+     */
+    private function make_https() {
+
+        $serverurl = $this->_serverurl;
+        $httpsexists = strpos($this->_serverurl, 'https://');
+        $httpexists = strpos($this->_serverurl, 'http://');
+
+        if (false === $httpsexists and false !== $httpexists) {
+            $serverurl = str_replace('http://', 'https://', $this->_serverurl);
+        } elseif (false === $httpsexists) {
+            $serverurl = 'https://' . $this->_serverurl;
+        }
+
+        return $serverurl;
     }
 
     /**
@@ -91,17 +122,39 @@ class connect_class {
      * @param array $add_header an array of headers to add to the request
      */
     public function send_request($return_header = 0, $add_header = array(), $stop = false) {
+        global $CFG;
+
         $ch = curl_init();
+
+        $serverurl = $this->_serverurl;
+
+        if ($this->_https) {
+
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+            $serverurl = $this->make_https();
+        }
 
         if ($stop) {
 //            echo $this->_serverurl . '?session='. $this->_cookie; die();
 //            https://example.com/api/xml?action=principal=list
-            curl_setopt($ch, CURLOPT_URL, $this->_serverurl/* . '?action=login&external-auth=use'*/);
+            curl_setopt($ch, CURLOPT_URL, $serverurl/* . '?action=login&external-auth=use'*/);
         } else {
             $querystring = (!empty($this->_cookie)) ?  '?session='. $this->_cookie : '';
-            curl_setopt($ch, CURLOPT_URL, $this->_serverurl . $querystring);
+            curl_setopt($ch, CURLOPT_URL, $serverurl . $querystring);
         }
 
+
+        // Connect through a proxy if Moodle config says we should
+        if(isset($CFG->proxyhost)) {
+
+            curl_setopt($ch, CURLOPT_PROXY, $CFG->proxyhost);
+
+            if (isset($CFG->proxyport)) {
+                curl_setopt($ch, CURLOPT_PROXYPORT, $CFG->proxyport);
+            }
+        }
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->_xmlrequest);

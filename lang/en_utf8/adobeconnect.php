@@ -83,6 +83,8 @@ $string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
 $string['adobeconnect:meetinghost'] = 'Meeting Host';
 $string['public'] = 'Public';
 $string['private'] = 'Private';
+$string['https'] = 'HTTPS Connection';
+$string['https_desc'] = 'Connect to the Connect server via HTTPS';
 
 // Error codes
 $string['emptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Please inform your Moodle administrator.';

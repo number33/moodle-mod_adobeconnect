@@ -13,6 +13,7 @@ function adobetestConnection(obj) {
     queryString += "&authUsername=" + escape(obj.id_s__adobeconnect_admin_login.value);
     queryString += "&authPassword=" + escape(obj.id_s__adobeconnect_admin_password.value);
     queryString += "&authHTTPheader=" + escape(obj.id_s__adobeconnect_admin_httpauth.value);
+    queryString += "&authHTTPS=" + escape(obj.id_s__adobeconnect_https.checked);
     
     if (obj.id_s__adobeconnect_email_login.checked) {
         queryString += "&authEmaillogin=1";
