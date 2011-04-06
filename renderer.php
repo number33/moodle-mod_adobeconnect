@@ -201,13 +201,16 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
     function display_meeting_recording($recordings, $adobesession) {
         global $CFG;
 
-        $html = '';
-
-        // Include the port number only if it is a port other than 80
-        $port = '';
+        $html       = '';
+        $protocol   = 'http://';
+        $port       = ''; // Include the port number only if it is a port other than 80
 
         if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
             $port = ':' . $CFG->adobeconnect_port;
+        }
+
+        if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+            $protocol = 'https://';
         }
 
         // Display the meeting name field and value
@@ -226,7 +229,7 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
                     $param = array('class' => 'aconrecordingrow');
                     $html .= html_writer::start_tag('div', $param);
 
-                    $url = 'http://'.$CFG->adobeconnect_meethost.$port
+                    $url = $protocol . $CFG->adobeconnect_meethost.$port
                             .$recording->url.'?session='.$adobesession;
 
                     $param = array('target' => '_blank');

@@ -44,6 +44,9 @@ $PAGE->requires->js_init_call('M.mod_adobeconnect.init');
     $settings->add(new admin_setting_configcheckbox('adobeconnect_email_login', get_string('email_login', 'adobeconnect'),
                        get_string('email_login_desc', 'adobeconnect'), '0'));
 
+    $settings->add(new admin_setting_configcheckbox('adobeconnect_https', get_string('https', 'adobeconnect'),
+                       get_string('https_desc', 'adobeconnect'), '0'));
+
 
     $url = $CFG->wwwroot . '/mod/adobeconnect/conntest.php';
     $url = htmlentities($url);

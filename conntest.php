@@ -44,6 +44,9 @@
     $param = array('name' => 'adobeconnect_email_login');
     $ac->emaillogin = $DB->get_field('config', 'value', $param);
 
+    $param = array('name' => 'adobeconnect_https');
+    $ac->https = $DB->get_field('config', 'value', $param);
+
     foreach ($ac as $propertyname => $propertyvalue) {
 
         if (0 != strcmp($propertyname, 'emaillogin') and
@@ -69,7 +72,15 @@
     $param->url = 'http://docs.moodle.org/en/Remote_learner_adobe_connect_pro';
     print_string('conntestintro', 'adobeconnect', $param);
 
-    adobe_connection_test($ac->host, $ac->port, $ac->login, $ac->pass, $ac->httpauth, $ac->emaillogin);
+    if (!empty($ac->https)) {
+        $https = true;
+    } else {
+        $https = false;
+    }
+
+    adobe_connection_test($ac->host, $ac->port, $ac->login,
+                          $ac->pass, $ac->httpauth,
+                          $ac->emaillogin, $ac->https);
 
     echo '<center>'. "\n";
     echo '<input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" />';

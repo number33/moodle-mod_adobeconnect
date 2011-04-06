@@ -159,3 +159,6 @@ $string['pluginadministration'] = 'Adobe Connect Administration';
 $string['pluginname'] = 'Adobe Connect';
 $string['modulename'] = 'Adobe Connect';
 $string['recordinghdr'] = 'Recordings';
+$string['https'] = 'HTTPS Connection';
+$string['https_desc'] = 'Connect to the Connect server via HTTPS';
+

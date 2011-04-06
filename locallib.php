@@ -29,7 +29,9 @@ define('ADOBE_MEETPERM_PRIVATE', 2); // means the meeting is private, and only r
 
 define('ADOBE_TMZ_LENGTH', 6);
 
-function adobe_connection_test($host = '', $port = 80, $username = '', $password = '', $httpheader = '', $emaillogin) {
+function adobe_connection_test($host = '', $port = 80, $username = '',
+                               $password = '', $httpheader = '',
+                               $emaillogin, $https = false) {
 
     if (empty($host) or
         empty($port) or (0 == $port) or
@@ -49,7 +51,9 @@ function adobe_connection_test($host = '', $port = 80, $username = '', $password
     $aconnectDOM = new connect_class_dom($host,
                                          $port,
                                          $username,
-                                         $password);
+                                         $password,
+                                         '',
+                                         $https);
 
     $params = array(
         'action' => 'common-info'
@@ -328,10 +332,19 @@ function aconnect_login() {
         $port = 80;
     }
 
+    $https = false;
+
+    if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+        $https = true;
+    }
+
+
     $aconnect = new connect_class_dom($CFG->adobeconnect_host,
-                                  $CFG->adobeconnect_port,
-                                  $CFG->adobeconnect_admin_login,
-                                  $CFG->adobeconnect_admin_password);
+                                      $CFG->adobeconnect_port,
+                                      $CFG->adobeconnect_admin_login,
+                                      $CFG->adobeconnect_admin_password,
+                                      '',
+                                      $https);
 
     $params = array(
         'action' => 'common-info'

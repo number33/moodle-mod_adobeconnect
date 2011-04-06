@@ -266,8 +266,15 @@ if (!empty($meetscoids)) {
 // Log in the current user
 $login = $usrobj->username;
 $password  = $usrobj->username;
+$https = false;
 
-$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port);
+if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+    $https = true;
+}
+
+$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
+                                  '', '', '', $https);
+
 $aconnect->request_http_header_login(1, $login);
 $adobesession = $aconnect->get_cookie();
 
@@ -317,8 +324,13 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
         $port = ':' . $CFG->adobeconnect_port;
     }
 
-    $url = 'http://' . $CFG->adobeconnect_meethost . $port
-           . $meeting->url;
+    $protocol = 'http://';
+
+    if ($https) {
+        $protocol = 'https://';
+    }
+        $url = $protocol . $CFG->adobeconnect_meethost . $port
+               . $meeting->url;
 
     $meetingdetail->url = $url;
 } else {
