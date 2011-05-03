@@ -10,7 +10,7 @@
 
 // Not sure if this page is needed anymore
 
-/**
+
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
@@ -24,26 +24,25 @@ if (! $course = $DB->get_record('course', $params)) {
     error('Course ID is incorrect');
 }
 
-require_course_login($course);
+$PAGE->set_pagelayout('incourse');
 
 add_to_log($course->id, 'adobeconnect', 'view all', "index.php?id=$course->id", '');
 
 
-/// Get all required stringsadobeconnect
+/// Get all required strings
 
-$stradobeconnects = get_string('modulenameplural', 'adobeconnect');
-$stradobeconnect  = get_string('modulename', 'adobeconnect');
+$stradobeconnects   = get_string('modulenameplural', 'adobeconnect');
+$stradobeconnect    = get_string('modulename', 'adobeconnect');
+$strsectionname     = get_string('sectionname', 'format_'.$course->format);
+$strname            = get_string('name');
+$strintro           = get_string('moduleintro');
 
 
-/// Print the header
-
-$navlinks = array();
-$navlinks[] = array('name' => $stradobeconnects, 'link' => '', 'type' => 'activity');
-$navigation = build_navigation($navlinks);
-
-print_header_simple($stradobeconnects, '', $navigation, '', '', true, '', navmenu($course));
-
-/// Get all the appropriate data
+$PAGE->set_url('/mod/adobeconnect/index.php', array('id' => $course->id));
+$PAGE->set_title($course->shortname.': '.$stradobeconnects);
+$PAGE->set_heading($course->fullname);
+$PAGE->navbar->add($stradobeconnects);
+echo $OUTPUT->header();
 
 if (! $adobeconnects = get_all_instances_in_course('adobeconnect', $course)) {
     notice(get_string('noinstances', 'adobeconnect'), "../../course/view.php?id=$course->id");
@@ -52,58 +51,42 @@ if (! $adobeconnects = get_all_instances_in_course('adobeconnect', $course)) {
 
 /// Print the list of instances (your module will probably extend this)
 
-$timenow  = time();
-$strname  = get_string('name');
-$strweek  = get_string('week');
-$strtopic = get_string('topic');
+$usesections = course_format_uses_sections($course->format);
+if ($usesections) {
+    $sections = get_all_sections($course->id);
+}
 
-if ($course->format == 'weeks') {
-    $table->head  = array ($strweek, $strname);
-    $table->align = array ('center', 'left');
-} else if ($course->format == 'topics') {
-    $table->head  = array ($strtopic, $strname);
-    $table->align = array ('center', 'left', 'left', 'left');
+$table = new html_table();
+$table->attributes['class'] = 'generaltable mod_index';
+
+if ($usesections) {
+    $table->head  = array ($strsectionname, $strname, $strintro);
+    $table->align = array ('center', 'left', 'left');
 } else {
-    $table->head  = array ($strname);
+    $table->head  = array ($strlastmodified, $strname, $strintro);
     $table->align = array ('left', 'left', 'left');
 }
 
-$groups = groups_get_user_groups($course->id, $USER->id);
-$groupid = '';
-$groupmode = '';
-
-if (array_key_exists(0, $groups)) {
-    $groupid = '&amp;group='.current($groups[0]);
-}
-
 foreach ($adobeconnects as $adobeconnect) {
-    $group = $groupid;
+    $linkparams = array('id' => $adobeconnect->coursemodule);
+    $linkoptions = array();
 
-    if (0 == $adobeconnect->groupmode) {
-        $group = '&amp;group=0';
-    }
+    $modviewurl = new moodle_url('/mod/adobeconnect/view.php', $linkparams);
 
     if (!$adobeconnect->visible) {
-        //Show dimmed if the mod is hidden
-        $link = '<a class="dimmed" href="view.php?id='.$adobeconnect->coursemodule.$group.'">'.format_string($adobeconnect->name).'</a>';
-    } else {
-        //Show normal if the mod is visible
-        $link = '<a href="view.php?id='.$adobeconnect->coursemodule.$group.'">'.format_string($adobeconnect->name).'</a>';
+        $linkoptions['class'] = 'dimmed';
     }
 
+    $link = html_writer::link($modviewurl, format_string($adobeconnect->name), $linkoptions);
+    $intro = $adobeconnect->intro;
+
     if ($course->format == 'weeks' or $course->format == 'topics') {
-        $table->data[] = array ($adobeconnect->section, $link);
+        $table->data[] = array ($adobeconnect->section, $link, $intro);
     } else {
-        $table->data[] = array ($link);
+        $table->data[] = array ($link, $intro);
     }
 }
 
-print_heading($stradobeconnects);
-print_table($table);
+echo html_writer::table($table);
 
-/// Finish the page
-
-print_footer($course);
-
-?>
-*/
+echo $OUTPUT->footer();

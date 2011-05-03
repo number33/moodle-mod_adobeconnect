@@ -54,8 +54,21 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
             $rs->close();
         }
 
-    /// survey savepoint reached
-        upgrade_mod_savepoint(true, 2010120800, 'adobeconnect');
+    /// adobeconnect savepoint reached
+        upgrade_mod_savepoint(true, 2011041400, 'adobeconnect');
+    }
+
+    if ($oldversion < 2011050300) {
+
+        // Changing precision of field meeturl on table adobeconnect to (60)
+        $table = new xmldb_table('adobeconnect');
+        $field = new xmldb_field('meeturl', XMLDB_TYPE_CHAR, '60', null, null, null, null, 'templatescoid');
+
+        // Launch change of precision for field meeturl
+        $dbman->change_field_precision($table, $field);
+
+        // adobeconnect savepoint reached
+        upgrade_mod_savepoint(true, 2011041400, 'adobeconnect');
     }
 
     return true;

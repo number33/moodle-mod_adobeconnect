@@ -79,8 +79,11 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $mform->setType('type', PARAM_INT);
 
         // Start and end date selectors
+        $time       = time();
+        $starttime  = usertime($time);
         $mform->addElement('date_time_selector', 'starttime', get_string('starttime', 'adobeconnect'));
         $mform->addElement('date_time_selector', 'endtime', get_string('endtime', 'adobeconnect'));
+        $mform->setDefault('endtime', strtotime('+2 hours', $starttime));
 
 
 //-------------------------------------------------------------------------------
@@ -129,6 +132,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
 
         // Now search for existing meeting room URLs
         $url = $data['meeturl'];
+        $url = $data['meeturl'] = adobeconnect_clean_meet_url($data['meeturl']);
 
         // Check to see if there are any trailing slashes or additional parts to the url
         // ex. mymeeting/mysecondmeeting/  Only the 'mymeeting' part is valid
@@ -148,6 +152,13 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
                 $url = '/' . $url;
             }
 
+        }
+
+        // Check URL for correct length and format
+        if (strlen($data['meeturl']) > 60) {
+            $errors['meeturl'] = get_string('longurl', 'adobeconnect');
+        } elseif (!preg_match('/^[a-z][a-z\-]*/i', $data['meeturl'])) {
+            $errors['meeturl'] = get_string('invalidurl', 'adobeconnect');
         }
 
         // Adding activity

@@ -69,7 +69,9 @@ function adobeconnect_supports($feature) {
 function adobeconnect_add_instance($adobeconnect) {
     global $COURSE, $USER, $DB;
 
-    $adobeconnect->timecreated = time();
+    $adobeconnect->timecreated  = time();
+    $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
+
     $return = false;
     $meeting = new stdClass();
 
@@ -130,10 +132,12 @@ function adobeconnect_add_instance($adobeconnect) {
             $meeting->name = $adobeconnect->name . '_' . $crsgroup->name;
 
             if (!empty($adobeconnect->meeturl)) {
-                $meeting->meeturl = $adobeconnect->meeturl   . '_' . $crsgroup->name;
+                $meeting->meeturl = adobeconnect_clean_meet_url($adobeconnect->meeturl   . '_' . $crsgroup->name);
             }
 
-            $meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid);
+            if (!$meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid)) {
+                debugging('error creating meeting', DEBUG_DEVELOPER);
+            }
 
             // Update permissions for meeting
             if (empty($adobeconnect->meetingpublic)) {
@@ -270,6 +274,8 @@ function adobeconnect_update_instance($adobeconnect) {
             $url = '/' . $url;
         }
     }
+
+    $url = adobeconnect_clean_meet_url($url);
 
     // Get all instances of the activity meetings
     $param = array('instanceid' => $adobeconnect->instance);
@@ -544,4 +550,16 @@ function adobeconnect_scale_used_anywhere($scaleid) {
     } else {
         return false;
     }
+}
+
+/**
+ * Meeting URLs need to start with an alpha then be alphanumeric
+ * or hyphen('-')
+ *
+ * @param string $meeturl Incoming URL
+ * @return string cleaned URL
+ */
+function adobeconnect_clean_meet_url($meeturl) {
+    $meeturl = preg_replace ('/[^a-z0-9]/i', '-', $meeturl);
+    return $meeturl;
 }

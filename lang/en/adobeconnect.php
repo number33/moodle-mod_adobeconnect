@@ -14,7 +14,7 @@ $string['adobeconnectfieldset'] = 'Adobe Connect Settings';
 $string['adobeconnecthost'] = 'Adobe Connect Host';
 $string['adobeconnecthostdescription'] = 'The host can give other users privileges, start and stop a meeting in addition to what a persenter can do';
 $string['adobeconnectintro'] = 'Intro';
-$string['adobeconnectname'] = 'Adobe Connect';
+$string['adobeconnectname'] = 'Meeting title';
 $string['adobeconnectparticipant'] = 'Adobe Connect Participant';
 $string['adobeconnectparticipantdescription'] = 'Can view, but cannot modify any of the meeting settings';
 $string['adobeconnectpresenter'] = 'Adobe Connect Presenter';
@@ -161,4 +161,6 @@ $string['modulename'] = 'Adobe Connect';
 $string['recordinghdr'] = 'Recordings';
 $string['https'] = 'HTTPS Connection';
 $string['https_desc'] = 'Connect to the Connect server via HTTPS';
+$string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
+$string['longurl'] = 'That meeting URL is too long. Try shortening it';
 

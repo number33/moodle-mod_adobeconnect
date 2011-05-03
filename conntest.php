@@ -15,6 +15,8 @@
 
     global $USER, $CFG, $DB, $OUTPUT;
 
+    $checkifempty = true; // Check for uninitialized variable
+
     $url = new moodle_url('/mod/adobeconnect/conntest.php');
     $PAGE->set_url($url);
 
@@ -49,13 +51,19 @@
 
     foreach ($ac as $propertyname => $propertyvalue) {
 
-        if (0 != strcmp($propertyname, 'emaillogin') and
-            empty($propertyvalue)) {
-//no-reply@remote-learner.net
-            //$url = $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect';
+        // Check if the property is equal to email login or https check boxes
+        // These are the only values allowed to be empty
+        $isnotemaillogin   = strcmp($propertyname, 'emaillogin');
+        $isnothttps        = strcmp($propertyname, 'https');
+
+        $checkifempty = $isnotemaillogin and $isnothttps;
+
+        // If this property is empty
+        if ($checkifempty and empty($propertyvalue)) {
             print_error('error2', 'adobeconnect', '', $propertyname);
             die();
         }
+
     }
 
     $strtitle = get_string('connectiontesttitle', 'adobeconnect');
