@@ -35,7 +35,9 @@ function adobeconnect_add_instance($adobeconnect) {
 
     global $COURSE, $USER;
 
-    $adobeconnect->timecreated = time();
+    $adobeconnect->timecreated  = time();
+    $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
+
     $return = false;
     $meeting = new stdClass();
 
@@ -91,10 +93,12 @@ function adobeconnect_add_instance($adobeconnect) {
             $meeting->name = $adobeconnect->name . '_' . $crsgroup->name;
 
             if (!empty($adobeconnect->meeturl)) {
-                $meeting->meeturl = $adobeconnect->meeturl   . '_' . $crsgroup->name;
+                $meeting->meeturl = adobeconnect_clean_meet_url($adobeconnect->meeturl   . '_' . $crsgroup->name);
             }
 
-            $meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid);
+            if (!$meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid)) {
+                debugging('error creating meeting', DEBUG_DEVELOPER);
+            }
 
             // Update permissions for meeting
             if (empty($adobeconnect->meetingpublic)) {
@@ -238,6 +242,8 @@ function adobeconnect_update_instance($adobeconnect) {
             $url = '/' . $url;
         }
     }
+
+    $url = adobeconnect_clean_meet_url($url);
 
     // Get all instances of the activity meetings
     $grpmeetings = get_records('adobeconnect_meeting_groups', 'instanceid', $adobeconnect->instance);
@@ -621,12 +627,14 @@ function adobeconnect_uninstall() {
     return $result;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////
-/// Any other adobeconnect functions go here.  Each of them must have a name that
-/// starts with adobeconnect_
-/// Remember (see note in first lines) that, if this section grows, it's HIGHLY
-/// recommended to move all funcions below to a new "localib.php" file.
-
-
+/**
+ * Meeting URLs need to start with an alpha then be alphanumeric or hyphen('-')
+ *
+ * @param string $meeturl Incoming URL
+ * @return string cleaned URL
+ */
+function adobeconnect_clean_meet_url($meeturl) {
+    $meeturl = preg_replace ('/[^a-z0-9]/i', '-', $meeturl);
+    return $meeturl;
+}
 ?>
