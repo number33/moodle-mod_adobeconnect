@@ -340,7 +340,6 @@ echo '<div class="aconlabeltitle" id="aconmeetstarttitle">'."\n";
 echo '<label for="lblmeetingstarttitle">'.get_string('meetingstart', 'adobeconnect').':</label>'."\n";
 echo '</div>'."\n";
 
-$time = date("D F, Y", $adobeconnect->starttime);
 $time = userdate($adobeconnect->starttime, "%a %B %d, %G");
 echo '<div class="aconlabeltext" id="aconmeetstarttxt">'."\n";
 echo '<label for="lblmeetingstart">'.$time.'</label><br />'."\n";
@@ -354,7 +353,6 @@ echo '<div class="aconlabeltitle" id="aconmeetendtitle">'."\n";
 echo '<label for="lblmeetingendtitle">'.get_string('meetingend', 'adobeconnect').':</label>'."\n";
 echo '</div>'."\n";
 
-$time = date("D F, Y", $adobeconnect->endtime);
 $time = userdate($adobeconnect->endtime, "%a %B %d, %G");
 echo '<div class="aconlabeltext" id="aconmeetendtxt">'."\n";
 echo '<label for="lblmeetingend">'.$time.'</label><br />'."\n";
