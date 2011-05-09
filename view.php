@@ -347,12 +347,10 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) o
 }
 
 // Get the meeting start time
-$time = date("D F, Y", $adobeconnect->starttime);
 $time = userdate($adobeconnect->starttime, "%a %B %d, %G");
 $meetingdetail->starttime = $time;
 
 // Get the meeting end time
-$time = date("D F, Y", $adobeconnect->endtime);
 $time = userdate($adobeconnect->endtime, "%a %B %d, %G");
 $meetingdetail->endtime = $time;
 
