@@ -56,7 +56,7 @@
         $isnotemaillogin   = strcmp($propertyname, 'emaillogin');
         $isnothttps        = strcmp($propertyname, 'https');
 
-        $checkifempty = $isnotemaillogin and $isnothttps;
+        $checkifempty = $isnotemaillogin && $isnothttps;
 
         // If this property is empty
         if ($checkifempty and empty($propertyvalue)) {
