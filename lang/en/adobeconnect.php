@@ -163,4 +163,6 @@ $string['https'] = 'HTTPS Connection';
 $string['https_desc'] = 'Connect to the Connect server via HTTPS';
 $string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
 $string['longurl'] = 'That meeting URL is too long. Try shortening it';
-
+$string['errorrecording'] = 'Unable to find recording session';
+$string['meetinfo'] = 'More Meeting Detail';
+$string['meetinfotxt'] = 'See server meeting details';

@@ -86,8 +86,6 @@ if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_lo
     $usrobj->username = $usrobj->email;
 }
 
-add_to_log($course->id, "adobeconnect", "view", "view.php?id=$cm->id", "$adobeconnect->id");
-
 /// Print the page header
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
 if ($groupid) {
@@ -103,15 +101,6 @@ echo $OUTPUT->header();
 
 $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect  = get_string('modulename', 'adobeconnect');
-
-//$navlinks = array();
-//$navlinks[] = array('name' => $stradobeconnects, 'link' => "index.php?id=$course->id", 'type' => 'activity');
-//$navlinks[] = array('name' => format_string($adobeconnect->name), 'link' => '', 'type' => 'activityinstance');
-
-//$navigation = build_navigation($navlinks);
-
-//print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '', true,
-//              update_module_button($cm->id, $course->id, $stradobeconnect), navmenu($course, $cm));
 
 // Check for empy group id, if empty check if this user belongs to any
 // group in the course and set the first group found as the default.
@@ -196,7 +185,7 @@ if (!empty($meetscoids)) {
         if (!empty($data2)) {
              $recording[] = $data2;
         }
-//        print_object(aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid));
+
     }
 
 
@@ -304,8 +293,6 @@ if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
 
 aconnect_logout($aconnect);
 
-//$context = get_context_instance(CONTEXT_MODULE, $cm->id);
-
 $sesskey = !empty($usrobj->sesskey) ? $usrobj->sesskey : '';
 
 $renderer = $PAGE->get_renderer('mod_adobeconnect');
@@ -329,12 +316,22 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     if ($https) {
         $protocol = 'https://';
     }
-        $url = $protocol . $CFG->adobeconnect_meethost . $port
-               . $meeting->url;
+
+    $url = $protocol . $CFG->adobeconnect_meethost . $port
+           . $meeting->url;
 
     $meetingdetail->url = $url;
+
+
+    $url = $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
+           $usrprincipal.'&amp;sco-id='.$scoid.'&amp;session='.$adobesession;
+
+    // Get the server meeting details link
+    $meetingdetail->servermeetinginfo = $url;
+
 } else {
     $meetingdetail->url = '';
+    $meetingdetail->servermeetinginfo = '';
 }
 
 // Determine if the user has the permissions to assign perticipants
@@ -346,12 +343,13 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) o
     $meetingdetail->participants = true;
 }
 
+//  CONTRIB-2929 - remove date format and let Moodle decide the format
 // Get the meeting start time
-$time = userdate($adobeconnect->starttime, "%a %B %d, %G");
+$time = userdate($adobeconnect->starttime);
 $meetingdetail->starttime = $time;
 
 // Get the meeting end time
-$time = userdate($adobeconnect->endtime, "%a %B %d, %G");
+$time = userdate($adobeconnect->endtime);
 $meetingdetail->endtime = $time;
 
 // Get the meeting intro text
@@ -384,10 +382,13 @@ if ($showrecordings and !empty($recordings)) {
     echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
     // Echo the rendered HTML to the page
-    echo $renderer->display_meeting_recording($recordings, $adobesession);
+    echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
 
     echo $OUTPUT->box_end();
 }
+
+add_to_log($course->id, 'adobeconnect', 'view',
+           "view.php?id=$cm->id", "View {$adobeconnect->name} details", $cm->id);
 
 /// Finish the page
 echo $OUTPUT->footer();

@@ -1,4 +1,4 @@
-$Id$
+$Id: README.txt,v 1.7 2011/01/03 16:54:40 adelamarre Exp $
 
 ABOUT THIS ACTIVITY MODULE
 =========================================

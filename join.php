@@ -43,8 +43,6 @@ if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_lo
     $usrobj->username = $usrobj->email;
 }
 
-add_to_log($course->id, "adobeconnect", "view", "join.php?id=$cm->id&groupid=$groupid&sesskey=$sesskey", "$adobeconnect->id");
-
 if (0 != $cm->groupmode){
 
     if (empty($groupid)) {
@@ -140,18 +138,6 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
             }
-        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id, false)) {
-            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PARTICIPANT, true)) {
-                //DEBUG
-//                 echo 'participant';
-//                 die();
-            } else {
-                //DEBUG
-                print_object('error assign user adobe particpant role');
-                print_object($aconnect->_xmlrequest);
-                print_object($aconnect->_xmlresponse);
-                $validuser = false;
-            }
         } elseif (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id, false)) {
             if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PRESENTER, true)) {
                 //DEBUG
@@ -160,6 +146,18 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
             } else {
                 //DEBUG
                 print_object('error assign user adobe presenter role');
+                print_object($aconnect->_xmlrequest);
+                print_object($aconnect->_xmlresponse);
+                $validuser = false;
+            }
+        } elseif (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id, false)) {
+            if (aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, ADOBE_PARTICIPANT, true)) {
+                //DEBUG
+//                 echo 'participant';
+//                 die();
+            } else {
+                //DEBUG
+                print_object('error assign user adobe particpant role');
                 print_object($aconnect->_xmlrequest);
                 print_object($aconnect->_xmlresponse);
                 $validuser = false;
@@ -209,8 +207,11 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
             $port = ':' . $CFG->adobeconnect_port;
         }
 
-        redirect($protocol . $CFG->adobeconnect_meethost . $port
+        add_to_log($course->id, 'adobeconnect', 'join meeting',
+                   "join.php?id=$cm->id&groupid=$groupid&sesskey=$sesskey",
+                   "Joined $adobeconnect->name meeting", $cm->id);
 
+        redirect($protocol . $CFG->adobeconnect_meethost . $port
                  . $meeting->url
                  . '?session=' . $aconnect->get_cookie());
     }

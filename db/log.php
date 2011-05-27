@@ -26,7 +26,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $logs = array(
-    array('module'=>'adobeconnect', 'action'=>'view', 'mtable'=>'adobeconnect', 'field'=>'name'),
-    array('module'=>'adobeconnect', 'action'=>'update', 'mtable'=>'adobeconnect', 'field'=>'name'),
-    array('module'=>'adobeconnect', 'action'=>'add', 'mtable'=>'adobeconnect', 'field'=>'name'),
+    array('module'=>'adobeconnect', 'action'=>'view',           'mtable'=>'adobeconnect', 'field'=>'name'),
+    array('module'=>'adobeconnect', 'action'=>'update',         'mtable'=>'adobeconnect', 'field'=>'name'),
+    array('module'=>'adobeconnect', 'action'=>'add',            'mtable'=>'adobeconnect', 'field'=>'name'),
+    array('module'=>'adobeconnect', 'action'=>'join meeting',   'mtable'=>'adobeconnect', 'field'=>'name'),
 );
