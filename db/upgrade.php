@@ -1,4 +1,4 @@
-<?php  //$Id$
+<?php  //$Id: upgrade.php,v 1.1.2.5 2011/05/03 22:42:07 adelamarre Exp $
 
 // This file keeps track of upgrades to
 // the adobeconnect module
@@ -23,15 +23,32 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
 
     $result = true;
 
- if ($result && $oldversion < 2011050301) { //New version in version.php
-     $table = new XMLDBTable('adobeconnect');
+    if ($result && $oldversion < 2011050301) { //New version in version.php
+        $table = new XMLDBTable('adobeconnect');
 
-     $field = new XMLDBField('meeturl');
-     $field->setAttributes(XMLDB_TYPE_CHAR, '60', null, XMLDB_NOTNULL, null, null, null, '0', 'templatescoid');
+        $field = new XMLDBField('meeturl');
+        $field->setAttributes(XMLDB_TYPE_CHAR, '60', null, XMLDB_NOTNULL, null, null, null, '0', 'templatescoid');
 
 
-     $result  = $result && change_field_precision($table, $field);
- }
+        $result  = $result && change_field_precision($table, $field);
+    }
+
+    if ($result && $oldversion < 2011050302) {
+
+        if (!record_exists('log_display', 'module', 'adobeconnect',
+                           'action', 'join meeting', 'field', 'name')) {
+
+            $newaction = new stdClass();
+            $newaction->module  = 'adobeconnect';
+            $newaction->action  = 'join meeting';
+            $newaction->field   = 'name';
+            $newaction->mtable  = 'adobeconnect';
+
+            $result = $result && insert_record('log_display', $newaction);
+        }
+    }
+
+
     return $result;
 }
 

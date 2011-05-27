@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: locallib.php,v 1.1.2.12 2011/04/05 15:27:02 adelamarre Exp $
 require_once('connect_class.php');
 require_once('connect_class_dom.php');
 
@@ -300,7 +300,9 @@ function aconnect_get_folder_sco_id($xml, $folder) {
 
 }
 
-
+/**
+ * Log in as the admin user.  This should only be used to conduct API calls.
+ */
 function aconnect_login() {
     global $CFG, $USER, $COURSE;
 
@@ -558,16 +560,20 @@ function aconnect_return_all_templates($xml) {
  * @param obj $aconnect a connect_class object
  * @param int $folderscoid the recordings folder sco-id
  * @param int $sourcescoid the meeting sco-id
+ * @param int $filterscoid filter on a specific sco-id.
  *
  * @return mixed array an array of object with the recording sco-id
  * as the key and the recording properties as properties
  */
-function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
+function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid, $filterscoid = '') {
+
     $params = array('action' => 'sco-contents',
                     'sco-id' => $folderscoid,
-                    //'filter-source-sco-id' => $sourcescoid,
                     'sort-name' => 'asc',
                     );
+    if (!empty($filterscoid)) {
+        $params['filter-sco-id'] = $filterscoid;
+    }
 
     // Check if meeting scoid and folder scoid are the same
     // If hey are the same then that means that forced recordings is not
@@ -584,6 +590,7 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
     $recordings = array();
 
     if ($aconnect->call_success()) {
+
         $dom = new DomDocument();
         $dom->loadXML($aconnect->_xmlresponse);
 
@@ -606,41 +613,45 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
                             if (!is_null($domnode)) {
                                 $meetingdetail = $innernodelist->item($x);
 
-                                $j = (int) $domnode->nodeValue;
-                                $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
-                                         $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
+                                // Check if the SCO item is a recording or uploaded document.  We only want to display recordings
+                                if (!is_null($meetingdetail->getElementsByTagName('duration')->item(0))) {
 
-                                $recordings[$j]->name = (string) $value;
+                                    $j = (int) $domnode->nodeValue;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
+                                             $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
-                                         $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
+                                    $recordings[$j]->name = (string) $value;
 
-                                $recordings[$j]->url = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
+                                             $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
-                                         $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
+                                    $recordings[$j]->url = (string) $value;
 
-                                $recordings[$j]->startdate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
+                                             $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
-                                         $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
+                                    $recordings[$j]->startdate = (string) $value;
 
-                                $recordings[$j]->enddate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
+                                             $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
-                                         $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
+                                    $recordings[$j]->enddate = (string) $value;
 
-                                $recordings[$j]->createdate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
+                                             $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
-                                         $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
+                                    $recordings[$j]->createdate = (string) $value;
 
-                                $recordings[$j]->modified = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
+                                             $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
-                                         $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
+                                    $recordings[$j]->modified = (string) $value;
 
-                                $recordings[$j]->duration = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
+                                             $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
+
+                                    $recordings[$j]->duration = (string) $value;
+                                }
 
                             }
                         }

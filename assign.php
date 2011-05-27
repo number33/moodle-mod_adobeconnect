@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: assign.php,v 1.1.2.5 2011/01/18 15:25:13 adelamarre Exp $
       // Script to assign users to contexts
 
     require_once('../../config.php');
@@ -392,7 +392,7 @@
                 if ($validroleids) {
                     $roleids =  '('.implode(',', $validroleids).')';
 
-                    $select = " SELECT u.id, u.firstname, u.lastname, u.email";
+                    $select = " SELECT DISTINCT(u.id), u.firstname, u.lastname, u.email";
                     $countselect = "SELECT COUNT(u.id)";
                     $from   = " FROM {$CFG->prefix}user u
                                 INNER JOIN {$CFG->prefix}role_assignments ra ON ra.userid = u.id
@@ -427,7 +427,7 @@
             /// MDL-11111 do not include user already assigned this role in this context as available users
             /// so that the number of available users is right and we save time looping later
             if (!empty($groupid)) {
-                $availableusers = get_recordset_sql('SELECT uu.id, uu.firstname, uu.lastname, uu.email
+                $availableusers = get_recordset_sql('SELECT DISTINCT(uu.id), uu.firstname, uu.lastname, uu.email
                                                     FROM '.$CFG->prefix.'user uu INNER JOIN '.$CFG->prefix.
                                                     'groups_members gm ON gm.userid = uu.id
                                                     WHERE '.$select.'
@@ -441,7 +441,7 @@
                                                         '.$selectsql.')
                                                     ORDER BY lastname ASC, firstname ASC');
             } else {
-                $availableusers = get_recordset_sql('SELECT id, firstname, lastname, email
+                $availableusers = get_recordset_sql('SELECT DISTINCT(id), firstname, lastname, email
                                                     FROM '.$CFG->prefix.'user
                                                     WHERE '.$select.'
                                                     AND id NOT IN (
@@ -455,7 +455,6 @@
                                                     ORDER BY lastname ASC, firstname ASC');
 
             }
-
             $usercount = $availableusers->_numOfRows;
         }
 

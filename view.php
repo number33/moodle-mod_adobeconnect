@@ -1,10 +1,10 @@
-<?php  // $Id$
+<?php  // $Id: view.php,v 1.1.2.13 2011/05/09 21:41:28 adelamarre Exp $
 
 /**
  * This page prints a particular instance of adobeconnect
  *
  * @author  Your Name <adelamarre@remote-learner.net>
- * @version $Id$
+ * @version $Id: view.php,v 1.1.2.13 2011/05/09 21:41:28 adelamarre Exp $
  * @package mod/adobeconnect
  */
 
@@ -59,8 +59,6 @@ $usrobj = clone($USER);
 if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
     $usrobj->username = $usrobj->email;
 }
-
-add_to_log($course->id, "adobeconnect", "view", "view.php?id=$cm->id", "$adobeconnect->id");
 
 /// Print the page header
 $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
@@ -159,7 +157,6 @@ if (!empty($meetscoids)) {
 //        print_object(aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid));
     }
 
-
     // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when a the
     // recording settings on ACP server change between publishing the recording links in meeting folders and
     // not publishing the recording links in meeting folders
@@ -225,7 +222,7 @@ if (!empty($meetscoids)) {
 
 // Log in the current user
 $login = $usrobj->username;
-$password  = $usrobj->username;
+//$password  = $usrobj->username;
 $https = false;
 
 if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
@@ -312,6 +309,14 @@ echo '</div>'."\n";
 if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     has_capability('mod/adobeconnect:meetinghost', $context)) {
 
+    // Get HTTPS setting
+    $https      = false;
+    $protocol   = 'http://';
+    if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+        $https      = true;
+        $protocol   = 'https://';
+    }
+
     // Include the port number only if it is a port other than 80
     $port = '';
 
@@ -319,7 +324,7 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
         $port = ':' . $CFG->adobeconnect_port;
     }
 
-    $url = 'http://' . $CFG->adobeconnect_meethost . $port
+    $url = $protocol . $CFG->adobeconnect_meethost . $port
            . $meeting->url;
     echo '<div class="aconmeetinforow">'."\n";
 
@@ -332,6 +337,39 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     echo '</div>'."\n";
 
     echo '</div>'."\n";
+
+    echo '<div class="aconmeetinforow">'."\n";
+
+    echo '<div class="aconlabeltitle" id="aconmeetinfotitle">'."\n";
+    echo '<label for="lblmeetinginfotitle">'.get_string('meetinfo', 'adobeconnect').':</label>'."\n";
+    echo '</div>'."\n";
+
+    $url = $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
+           $usrprincipal.'&amp;sco-id='.$scoid.'&amp;session='.$adobesession;
+    echo '<div class="aconlabeltext" id="aconmeetinfotext">'."\n";
+    echo '<a href="'. $url . '" target="_blank">'. get_string('meetinfotxt', 'adobeconnect') . '</a><br />'."\n";
+    echo '</div>'."\n";
+
+    echo '</div>'."\n";
+
+//    echo '<div class="aconbtninfo">'."\n";
+//    echo button_to_popup_window('www.google.ca',
+//                                'btnname', get_string('joinmeeting', 'adobeconnect'), 900, 900, null, null, true);
+//    echo '</div>'."\n";
+
+//$port = '';
+//    echo '<div class="aconbtninfo">'."\n";
+//    $infourl= $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
+//            $usrprincipal.'&amp;sco-id='.$scoid.'&amp;session='.$adobesession;
+//    echo '<input type="button" name="info" value="'.get_string('meetinginfo', 'adobeconnect').
+//        '" onClick="window.open(\''.$infourl.'\',\'meetinginfo\',\'dependent=no\'); return false;">';
+//    echo '</div>'."\n";
+
+
+
+//---------
+
+
 }
 
 echo '<div class="aconmeetinforow">'."\n";
@@ -340,7 +378,8 @@ echo '<div class="aconlabeltitle" id="aconmeetstarttitle">'."\n";
 echo '<label for="lblmeetingstarttitle">'.get_string('meetingstart', 'adobeconnect').':</label>'."\n";
 echo '</div>'."\n";
 
-$time = userdate($adobeconnect->starttime, "%a %B %d, %G");
+//  CONTRIB-2929 - remove date format and let Moodle decide the format
+$time = userdate($adobeconnect->starttime);
 echo '<div class="aconlabeltext" id="aconmeetstarttxt">'."\n";
 echo '<label for="lblmeetingstart">'.$time.'</label><br />'."\n";
 echo '</div>'."\n";
@@ -353,7 +392,7 @@ echo '<div class="aconlabeltitle" id="aconmeetendtitle">'."\n";
 echo '<label for="lblmeetingendtitle">'.get_string('meetingend', 'adobeconnect').':</label>'."\n";
 echo '</div>'."\n";
 
-$time = userdate($adobeconnect->endtime, "%a %B %d, %G");
+$time = userdate($adobeconnect->endtime);
 echo '<div class="aconlabeltext" id="aconmeetendtxt">'."\n";
 echo '<label for="lblmeetingend">'.$time.'</label><br />'."\n";
 echo '</div>'."\n";
@@ -389,6 +428,7 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) o
     echo '<div class="aconbtnroles">'."\n";
     echo '<input type="submit" name="participants" value="'.get_string('selectparticipants', 'adobeconnect').'">';
     echo '</div>'."\n";
+
 }
 
 echo '</div>'."\n";
@@ -400,6 +440,7 @@ echo '<input type="hidden" name="sesskey" value="'.$sesskey.'">'."\n";
 echo '</form>'."\n";
 
 echo '<br />';
+
 
 $showrecordings = false;
 // Check if meeting is private, if so check the user's capability.  If public show recorded meetings
@@ -414,34 +455,25 @@ if (!$adobeconnect->meetingpublic) {
 
 $recordings = $recording;
 
-// Include the port number only if it is a port other than 80
-$port = '';
-
-if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
-    $port = ':' . $CFG->adobeconnect_port;
-}
-
 if ($showrecordings and !empty($recordings)) {
 
     echo '<div id="aconfldset2" class="aconfldset">'."\n";
     echo '<fieldset>'."\n";
     echo '<legend>'.get_string('recordinghdr', 'adobeconnect').'</legend>'."\n";
 
-    $protocol = 'http://';
-
-    if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
-        $protocol = 'https://';
-    }
-
     echo '<div class="aconrecording">'."\n";
     foreach ($recordings as $key => $recordinggrp) {
+
         if (!empty($recordinggrp)) {
-            foreach($recordinggrp as $recording) {
+
+            foreach($recordinggrp as $recording_scoid => $recording) {
+
                 echo '<div class="aconrecordingrow">'."\n";
-                echo '<a href="'.$protocol . $CFG->adobeconnect_meethost . $port
-                     . $recording->url . '?session=' . $adobesession.
+                echo '<a href="joinrecording.php?id=' . $id. '&recording='. $recording_scoid .
+                     '&groupid=' . $groupid . '&sesskey=' . $USER->sesskey .
                      '" target="_blank">'. format_string($recording->name) .'</a><br />';
                 echo '</div>'."\n";
+
             }
         }
     }
@@ -450,6 +482,9 @@ if ($showrecordings and !empty($recordings)) {
     echo '</fieldset>'."\n";
     echo '</div>'."\n";
 }
+
+add_to_log($course->id, 'adobeconnect', 'view',
+           "view.php?id=$cm->id", "View {$adobeconnect->name} details", $cm->id);
 
 /// Finish the page
 print_footer($course);

@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: adobeconnect.php,v 1.1.2.10 2011/05/03 22:42:07 adelamarre Exp $
 $string['actinbtngrp'] = '';
 $string['addparticipant'] = 'Add';
 $string['addpresenter']  = 'Add';
@@ -99,4 +99,7 @@ $string['nomeeting'] = 'No meeting exists on the server';
 $string['noinstances'] = 'There are no instances of adobeconnect';
 $string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
 $string['longurl'] = 'That meeting URL is too long. Try shortening it';
+$string['errorrecording'] = 'Unable to find recording session';
+$string['meetinfo'] = 'More Meeting Detail';
+$string['meetinfotxt'] = 'See server meeting details'
 ?>

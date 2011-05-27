@@ -48,6 +48,7 @@
         <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'add', 'adobeconnect', 'name')" />
         <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'update', 'adobeconnect', 'name')" />
         <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'view', 'adobeconnect', 'name')" />
+        <SENTENCE TEXT="(module, action, mtable, field) VALUES ('adobeconnect', 'join meeting', 'adobeconnect', 'name')" />
       </SENTENCES>
     </STATEMENT>
   </STATEMENTS>

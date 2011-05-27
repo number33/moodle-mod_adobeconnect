@@ -1,4 +1,4 @@
-<?php //$Id$
+<?php //$Id: mod_form.php,v 1.1.2.6 2011/05/03 22:42:07 adelamarre Exp $
 
 /**
  * This file defines the main adobeconnect configuration form
@@ -47,7 +47,6 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     /// Adding the required "intro" field to hold the description of the instance
         $mform->addElement('htmleditor', 'intro', get_string('adobeconnectintro', 'adobeconnect'));
         $mform->setType('intro', PARAM_RAW);
-        $mform->addRule('intro', get_string('required'), 'required', null, 'client');
         $mform->setHelpButton('intro', array('writing', 'richtext'), false, 'editorhelpbutton');
 
     /// Adding "introformat" field

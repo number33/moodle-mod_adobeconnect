@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: styles.php,v 1.1.2.4 2010/03/17 20:13:39 adelamarre Exp $ */
 
 .aconfldset fieldset legend {
     font-weight: bold;
@@ -32,25 +32,28 @@
 }
 
 #aconmeetnametitle {
-    margin-right: 30px;
-}
-
-#aconmeeturltitle {
     margin-right: 40px;
 }
 
+#aconmeeturltitle {
+    margin-right: 50px;
+}
+
 #aconmeetstarttitle {
-    margin-right: 4px;
+    margin-right: 14px;
 }
 
 #aconmeetendtitle {
-    margin-right: 9px;
+    margin-right: 19px;
 }
 
 #aconmeetsummarytitle {
-    margin-right: 3px;
+    margin-right: 13px;
 }
 
 #aconmeetsummarytxt {
 /*    padding-left: 50px;*/
+}
+
+#aconmeetinfotext {
 }

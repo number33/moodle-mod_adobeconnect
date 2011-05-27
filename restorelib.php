@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: restorelib.php,v 1.1.2.1 2010/04/26 23:44:29 adelamarre Exp $
 
     //This function executes all the restore procedure about this mod
     function adobeconnect_restore_mods($mod,$restore) {

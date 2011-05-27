@@ -1,4 +1,4 @@
-<?php  // $Id$
+<?php  // $Id: lib.php,v 1.1.2.9 2011/05/03 22:42:07 adelamarre Exp $
 
 require_once('locallib.php');
 

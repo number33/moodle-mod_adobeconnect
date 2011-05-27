@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: settings.php,v 1.1.2.8 2011/04/05 15:27:03 adelamarre Exp $
 require_once($CFG->dirroot . '/mod/adobeconnect/locallib.php');
 require_js($CFG->wwwroot . '/mod/adobeconnect/testserverconnection.js');
 
