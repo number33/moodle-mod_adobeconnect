@@ -116,11 +116,12 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     }
 
     function validation($data, $files) {
-        global $CFG;
+        global $CFG, $USER;
 
         $errors = parent::validation($data, $files);
 
         $aconnect = aconnect_login();
+
 
         // Search for a Meeting with the same starting name.  It will cause a duplicate
         // meeting name (and error) when the user begins to add participants to the meeting

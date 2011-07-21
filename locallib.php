@@ -1222,6 +1222,70 @@ function aconnect_move_to_shared($aconnect, $scolist) {
     }
 }
 
+/**
+ * Helper function:
+ * Returns an array with the currently set HTTP protocol
+ *
+ * @param none
+ * @return array - string $protocol (http:// or https://),  boolean $https
+ */
+function get_protocol() {
+    global $CFG;
+
+    $protocol = 'http://';
+    $https = false;
+
+    if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
+
+        $protocol = 'https://';
+        $https = true;
+    }
+
+    return array($protocol, $https);
+}
+
+/**
+ * Helper function:
+ * Login a moodle user into the Connect Pro server.  Will return either the
+ * entire connection class object or only return the connection session value
+ *
+ * @param string $username - the moodle username
+ * @param boolean $return_session - true to return only the connection session
+ * or false to return the entire connection class object
+ */
+function login_moodle_user($username, $return_session = true) {
+    global $CFG;
+
+    $protocol   = '';
+    $https      = '';
+
+    list($protocol, $https) = get_protocol();
+
+    $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
+                                      '', '', '', $https);
+    $aconnect->request_http_header_login(1, $username);
+
+    if ($return_session) {
+        return $aconnect->get_cookie();
+    } else {
+        return $aconnect;
+    }
+
+}
+
+/**
+ * This function is primarily used for debugging.  Do not use if you don't know
+ * what you are doing
+ */
+function make_api_call($aconnect, $params = array()) {
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+        return $aconnect;
+    } else {
+        return false;
+    }
+}
 
 //function get_nonparticipant_users($instanceid, $courseid, $groupid = 0) {
 //    global $CFG;

@@ -119,6 +119,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
             print_object($aconnect->_xmlresponse);
             $validuser = false;
         }
+
     }
 
     $context = get_context_instance(CONTEXT_MODULE, $id);
