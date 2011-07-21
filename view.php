@@ -102,23 +102,22 @@ echo $OUTPUT->header();
 $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect  = get_string('modulename', 'adobeconnect');
 
-// Check for empy group id, if empty check if this user belongs to any
+// Check for empty group id, if empty check if this user belongs to any
 // group in the course and set the first group found as the default.
 // This is required for the groups selection drop down box and for the
 // initial display of the meeting details.
-
 if (0 != $cm->groupmode){
     if (empty($groupid)) {
         $groups = groups_get_user_groups($course->id, $usrobj->id);
-
         if (array_key_exists(0, $groups)) {
             $groupid = current($groups[0]);
         }
 
         if (empty($groupid)) {
+
             $groupid = 0;
             $message = get_string('usergrouprequired', 'adobeconnect');
-            $OUTPUT->notification($message);
+            echo $OUTPUT->notification($message);
             echo $OUTPUT->footer();
             die();
         }
