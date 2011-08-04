@@ -178,6 +178,9 @@ function adobe_connection_test($host = '', $port = 80, $username = '',
                         echo '<p>error creating user  <b>testusertest</b></p>';
                         echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
                         echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+
+                        aconnect_logout($aconnectDOM);
+                        die();
                     }
                 } else {
 
@@ -1029,7 +1032,7 @@ function aconnect_create_user($aconnect, $usrdata) {
         'first-name' => $usrdata->firstname,
         'last-name' => $usrdata->lastname,
         'login' => $usrdata->username,
-        'password' => md5($usrdata->username . time()),
+        'password' => strtoupper(md5($usrdata->username . time())),
         'extlogin' => $usrdata->username,
         'type' => 'user',
         'send-email' => 'false',
