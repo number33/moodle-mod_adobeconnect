@@ -24,12 +24,12 @@ if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
     error('Course Module ID was incorrect');
 }
 $cond = array('id' => $cm->course);
-if (! $course = $DB->get_record('course', 'id', $cond)) {
+if (! $course = $DB->get_record('course', $cond)) {
     error('Course is misconfigured');
 }
 
 $cond = array('id' => $cm->instance);
-if (! $adobeconnect = $DB->get_record('adobeconnect', 'id', $cond)) {
+if (! $adobeconnect = $DB->get_record('adobeconnect', $cond)) {
     error('Course module is incorrect');
 }
 
