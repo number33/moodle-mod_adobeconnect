@@ -103,16 +103,14 @@ $string['settingblurb'] = '<center><img src="{$a->image}" /></center><br />
     and officially sponsored, integration method between Moodle and Adobe Acrobat Connect Pro. This new
     integration is designed to simplify the use of synchronous events within Moodle. It provides a
     single-sign-on between the two systems with easy creation and management of Adobe Connect Pro
-    meetings.</p>
-
+    meetings.</p><br />
     <p><center>About Remote-Learner</center>
     Remote-Learner has been providing educational technologies services since 1982 to its business,
     educational and governmental clients. Today, these services include support for best-of-breed
     open source programs. Remote-Learner is an official Moodle partner, JasperSoft partner and
     Alfresco partner. The company offers SaaS hosting services, IT support contracts, custom
     programming, workforce development training, instructional design and strategic consulting
-    services for organizations planning online learning programs.</p>
-
+    services for organizations planning online learning programs.</p><br />
     <p>Visit {$a->url} for information on Enterprise support</p>';
 $string['meeturl_help'] = '<p>You can customize the URL that is used to connect to the Adobe connect meeting.  The Adobe Server domain will always remain the same.
   However the last part of the URL can be customized.
