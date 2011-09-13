@@ -79,7 +79,7 @@ $string['connectiontesttitle'] = 'Test Connessione Adobe Connect';
 $string['conntestintro'] = '<p>Saranno condotti una serie di test al fine di verificare la corretta impostazione del modulo'.
 ' e per determinare se le credenziali fornite hanno diritti sufficienti sul server Adobe connect per garantire il funzionamento della attivita.'.
 ' Se uno dei test dovesse fallire, si rende necessario operare per risolverli, o altrimenti il modulo non funzioner&agrave;a</p><p> Per ulteriori informazioni e assistenza su come impostare il server'.
-' Adobe Connect Pro, &egrave; possibile consultare le pagine presenti su Moodledocs per questo modulo <a href=\"http://docs.moodle.org/en/Remote_learner_adobe_connect_pro\">Help page</a></p>';
+' Adobe Connect Pro, &egrave; possibile consultare le pagine presenti su Moodledocs per questo modulo <a href="{$a->url}">Help page</a></p>';
 $string['greaterstarttime'] = 'L\'orario di inizio non puo essere maggiore di quello di fine';
 $string['invalidadobemeeturl'] = 'Il valore inserito non e corretto.  Per maggiori informazioni potete selezionare il pulsante di help relativo a questo campo';
 
