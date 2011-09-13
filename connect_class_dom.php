@@ -74,7 +74,11 @@ class connect_class_dom extends connect_class {
         $dom->loadXML($xml);
         $domnodelist = $dom->getElementsByTagName('cookie');
 
-        $this->_cookie = $domnodelist->item(0)->nodeValue;
+        if (isset($domnodelist->item(0)->nodeValue)) {
+            $this->_cookie = $domnodelist->item(0)->nodeValue;
+        } else {
+            $this->_cookie = null;
+        }
 
     }
 
