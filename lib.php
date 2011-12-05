@@ -521,15 +521,7 @@ function adobeconnect_get_participants($adobeconnectid) {
  * @todo Finish documenting this function
  */
 function adobeconnect_scale_used($adobeconnectid, $scaleid) {
-    $return = false;
-
-    //$rec = get_record("adobeconnect","id","$adobeconnectid","scale","-$scaleid");
-    //
-    //if (!empty($rec) && !empty($scaleid)) {
-    //    $return = true;
-    //}
-
-    return $return;
+    return false;
 }
 
 
@@ -542,14 +534,7 @@ function adobeconnect_scale_used($adobeconnectid, $scaleid) {
  * @return boolean True if the scale is used by any adobeconnect
  */
 function adobeconnect_scale_used_anywhere($scaleid) {
-    global $DB;
-
-    $param = array('grade' => $scaleid);
-    if ($scaleid and $DB->record_exists('adobeconnect', $param)) {
-        return true;
-    } else {
-        return false;
-    }
+    return false;
 }
 
 /**
