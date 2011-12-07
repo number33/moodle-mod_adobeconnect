@@ -116,7 +116,7 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     }
 
     function validation($data, $files) {
-        global $CFG, $USER;
+        global $CFG, $USER, $COURSE;
 
         $errors = parent::validation($data, $files);
 
@@ -179,6 +179,15 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
             if (record_exists('adobeconnect', 'name', $data['name'])) {
                 $errors['name'] = get_string('duplicatemeetingname', 'adobeconnect');
                 return $errors;
+            }
+
+            // Check that the course has groups if group mode is on
+            if (0 != $data['groupmode']) { // Allow for multiple groups
+                // get all groups for the course
+                $crsgroups = groups_get_all_groups($COURSE->id);
+                if (empty($crsgroups)) {
+                    $errors['groupmode'] = get_string('invalidgroupmode', 'adobeconnect');
+                }
             }
 
             // Check Adobe connect server for duplicated names
