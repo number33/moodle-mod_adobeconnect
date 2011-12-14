@@ -14,8 +14,9 @@ require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/connect_class.php');
 require_once(dirname(__FILE__).'/connect_class_dom.php');
 
-$id         = required_param('id', PARAM_INT);
-$groupid    = required_param('groupid', PARAM_INT);
+$id          = required_param('id', PARAM_INT);
+$groupid     = required_param('groupid', PARAM_INT);
+$recordingid = required_param('recording', PARAM_INT);    
 
 // Do the usual Moodle setup
 if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
@@ -67,27 +68,38 @@ $meetscoid = get_record_sql($sql);
 
 // Get the Meeting recording details
 $aconnect   = aconnect_login();
-$recording  = array();
+$recordings = array();
 $fldid      = aconnect_get_folder($aconnect, 'content');
 
 $data = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
 
 if (!empty($data)) {
-    $recording = $data;
+    $recordings = $data;
 }
 
 // If at first you don't succeed ...
 $data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
 
 if (!empty($data2)) {
-     $recording = $data2;
+     $recordings = $data2;
 }
 
 aconnect_logout($aconnect);
 
-if (empty($recording) and confirm_sesskey()) {
-    notify(get_string('errormeeting', 'adobeconnect'));
-    die();
+if ((!isset($recordings[$recordingid]) || empty($recordings[$recordingid])) && confirm_sesskey()) {
+    /// Print the page header
+    $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
+    $stradobeconnect  = get_string('modulename', 'adobeconnect');
+
+    $navlinks = array();
+    $navlinks[] = array('name' => $stradobeconnects, 'link' => "index.php?id=$course->id", 'type' => 'activity');
+    $navlinks[] = array('name' => format_string($adobeconnect->name), 'link' => '', 'type' => 'activityinstance');
+
+    $navigation = build_navigation($navlinks);
+
+    print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '', true,
+                  update_module_button($cm->id, $course->id, $stradobeconnect), navmenu($course, $cm));
+    notice(get_string('errorrecording', 'adobeconnect'));
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',
@@ -102,6 +114,6 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
 
 
 redirect($protocol . $CFG->adobeconnect_meethost . $port
-                     . $recording->url . '?session=' . $adobesession);
+                     . $recordings[$recordingid]->url . '?session=' . $adobesession);
 
 ?>
