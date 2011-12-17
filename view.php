@@ -136,7 +136,7 @@ $sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
 
 
 $meetscoids = $DB->get_records_sql($sql, $params);
-$recording = array();
+$recordings = array();
 
 if (!empty($meetscoids)) {
     $recscoids = array();
@@ -175,14 +175,22 @@ if (!empty($meetscoids)) {
         // May need this later on
         $data = aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid);
 
+         //Get group id for recording
+        if (0 !== $cm->groupmode) {
+            $rgroupid = $DB->get_field_select('adobeconnect_meeting_groups', 'groupid','meetingscoid = '.$scoid->meetingscoid);
+        }
+        if (empty($rgroupid)) {
+            $rgroupid = 0;
+        }
+
         if (!empty($data)) {
-            $recording[] = $data;
+            $recordings[$rgroupid] = $data;
         }
 
         $data2 = aconnect_get_recordings($aconnect, $scoid->meetingscoid, $scoid->meetingscoid);
 
         if (!empty($data2)) {
-             $recording[] = $data2;
+             $recordings[$rgroupid] = $data2;
         }
 
     }
@@ -192,9 +200,9 @@ if (!empty($meetscoids)) {
     // recording settings on ACP server change between publishing the recording links in meeting folders and
     // not publishing the recording links in meeting folders
     $names = array();
-    foreach ($recording as $key => $recordingarray) {
+    foreach ($recordings as $rgroupid => $recordingarray) {
 
-        foreach ($recordingarray as $key2 => $record) {
+        foreach ($recordingarray as $recording_scoid => $record) {
 
 
             if (!empty($names)) {
@@ -204,7 +212,7 @@ if (!empty($meetscoids)) {
                     $names[] = $record->name;
                 } else {
 
-                    unset($recording[$key][$key2]);
+                    unset($recordings[$rgroupid][$recording_scoid]);
                 }
             } else {
 
@@ -375,15 +383,15 @@ if (!$adobeconnect->meetingpublic) {
     $showrecordings = true;
 }
 
-$recordings = $recording;
+if ($showrecordings && isset($recordings) && isset($recordings[$groupid]) && !empty($recordings[$groupid])) {
+    foreach ($recordings[$groupid] as $recording_scoid => $recording) {
+        echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
-if ($showrecordings and !empty($recordings)) {
-    echo $OUTPUT->box_start('generalbox', 'meetingsummary');
+        // Echo the rendered HTML to the page
+        echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
 
-    // Echo the rendered HTML to the page
-    echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
-
-    echo $OUTPUT->box_end();
+        echo $OUTPUT->box_end();
+    }
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',
