@@ -82,9 +82,7 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
 $usrobj = new stdClass();
 $usrobj = clone($USER);
 
-if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
-    $usrobj->username = $usrobj->email;
-}
+$usrobj->username = set_username($usrobj->username, $usrobj->email);
 
 /// Print the page header
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
@@ -278,17 +276,28 @@ $cond = array('instanceid' => $adobeconnect->id, 'groupid' => $groupid);
 $scoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid', $cond);
 
 $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+
+
 $filter = array('filter-sco-id' => $scoid);
 
 if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
     $meeting = current($meeting);
 } else {
-    $message = get_string('nomeeting', 'adobeconnect');
-    $OUTPUT->notification($message);
-    aconnect_logout($aconnect);
-    die();
-}
+    
+    // If the user's meeting doesn't exist in the shared folder, check their personal adobe
+    // connect folder
+    $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $usrobj->username);
+    
+    if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
+        $meeting = current($meeting);
+    } else {
 
+        $message = get_string('nomeeting', 'adobeconnect');
+        echo $OUTPUT->notification($message);
+        aconnect_logout($aconnect);
+        die();
+    }
+}
 
 aconnect_logout($aconnect);
 

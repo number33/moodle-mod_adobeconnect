@@ -1339,3 +1339,111 @@ function adobeconnect_get_assignable_roles($context, $rolenamedisplay = ROLENAME
     }
     return array($rolenames, $rolecounts, $nameswithcounts);
 }
+
+/**
+ * This function accepts a username and an email and returns the user's
+ * adobe connect user name, depending on the module's configuration settings
+ * 
+ * @param string - moodle username
+ * @param string - moodle email
+ * 
+ * @return string - user's adobe connect user name
+ */
+function set_username($username, $email) {
+    global $CFG;
+    
+    if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+        return $email;
+    } else {
+        return $username;
+    }
+}
+
+/**
+ * This function search through the user-meetings folder for a folder named
+ * after the user's login name and returns the sco-id of the user's folder
+ * 
+ * @param obj - adobe connection connection object
+ * @param string - the name of the user's folder
+ * @return mixed - sco-id of the user folder (int) or false if no folder exists
+ * 
+ */
+function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
+
+    $scoid   = false;
+    $usr_meet_scoid = aconnect_get_folder($aconnect, 'user-meetings');
+    
+    if (empty($usr_meet_scoid)) {
+        return $scoid;
+    }
+    
+    $params = array('action' => 'sco-expanded-contents',
+                    'sco-id' => $usr_meet_scoid,
+                    'filter-name' => $folder_name);
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
+    
+        $domnodelist = $dom->getElementsByTagName('sco');
+    
+        if (!empty($domnodelist->length)) {
+            if ($domnodelist->item(0)->hasAttributes()) {
+                $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
+    
+                if (!is_null($domnode)) {
+                    $scoid = (int) $domnode->nodeValue;
+                }
+            }
+        }
+//        $params = array('action' => 'sco-contents', 'sco-id' => $folderscoid);
+    }
+    
+    return $scoid;
+}
+/**
+ * TEST FUNCTIONS - DELETE THIS AFTER COMPLETION OF TEST
+ */
+/* 
+function texpandsco ($aconnect, $scoid) {
+    global $USER;
+    
+    $folderscoid = false;
+    $params = array('action' => 'sco-expanded-contents',
+                    'sco-id' => $scoid,
+                    'filter-name' => $USER->email);
+
+    $aconnect->create_request($params);
+
+//    if ($aconnect->call_success()) {
+//    }
+
+}
+
+function tout ($data) {
+    $filename = '/tmp/tout.xml';
+    $somecontent = $data;
+    
+    if (is_writable($filename)) {
+        if (!$handle = fopen($filename, 'w')) {
+             echo "Cannot open file ($filename)";
+             return;
+        }
+    
+        // Write $somecontent to our opened file.
+        if (fwrite($handle, $somecontent) === FALSE) {
+            echo "Cannot write to file ($filename)";
+            return;
+        }
+    
+        //echo "Success, wrote ($somecontent) to file ($filename)";
+    
+        fclose($handle);
+    
+    } else {
+        echo "The file $filename is not writable";
+    }
+} */

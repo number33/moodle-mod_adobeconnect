@@ -72,8 +72,10 @@ function adobeconnect_add_instance($adobeconnect) {
     $adobeconnect->timecreated  = time();
     $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
 
-    $return = false;
-    $meeting = new stdClass();
+    $return       = false;
+    $meeting      = new stdClass();
+    $username     = set_username($USER->username, $USER->email);
+    $meetfldscoid = '';
 
     // Assign the current user with the Adobe Presenter role
     $context = get_context_instance(CONTEXT_COURSE, $adobeconnect->course);
@@ -97,7 +99,13 @@ function adobeconnect_add_instance($adobeconnect) {
     }
 
     $aconnect = aconnect_login();
-    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    
+    // Get the user's meeting folder location, if non exists then get the shared
+    // meeting folder location
+    $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+    if (empty($meetfldscoid)) {
+        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    }
 
     $meeting = clone $adobeconnect;
 

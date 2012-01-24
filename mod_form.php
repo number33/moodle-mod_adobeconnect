@@ -114,18 +114,24 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
     }
 
     function validation($data, $files) {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER;
 
         $errors = parent::validation($data, $files);
 
-        $aconnect = aconnect_login();
+        $username     = set_username($USER->username, $USER->email);
+        $usr_fldscoid = '';
+        $aconnect     = aconnect_login();
 
         // Search for a Meeting with the same starting name.  It will cause a duplicate
         // meeting name (and error) when the user begins to add participants to the meeting
         $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
         $filter = array('filter-like-name' => $data['name']);
-        $namematches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
-
+        $namematches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);        
+        
+        /// Search the user's adobe connect folder
+        $usr_fldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+        $namematches = $namematches + aconnect_meeting_exists($aconnect, $usr_fldscoid, $filter);
+        
         if (empty($namematches)) {
             $namematches = array();
         }
@@ -142,6 +148,9 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
 
         $filter = array('filter-like-url-path' => $url);
         $urlmatches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+        
+        /// Search the user's adobe connect folder
+        $urlmatches = $urlmatches + aconnect_meeting_exists($aconnect, $usr_fldscoid, $filter);
 
         if (empty($urlmatches)) {
             $urlmatches = array();

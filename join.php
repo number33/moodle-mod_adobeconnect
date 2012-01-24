@@ -38,10 +38,7 @@ require_login($course, true, $cm);
 // Check if the user's email is the Connect Pro user's login
 $usrobj = new stdClass();
 $usrobj = clone($USER);
-
-if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
-    $usrobj->username = $usrobj->email;
-}
+$usrobj->username = set_username($usrobj->username, $usrobj->email);
 
 if (0 != $cm->groupmode){
 
