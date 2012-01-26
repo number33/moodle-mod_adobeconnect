@@ -71,6 +71,7 @@ function adobeconnect_add_instance($adobeconnect) {
 
     $adobeconnect->timecreated  = time();
     $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
+    $adobeconnect->userid       = $USER->id;
 
     $return       = false;
     $meeting      = new stdClass();
@@ -250,10 +251,12 @@ function adobeconnect_add_instance($adobeconnect) {
  * @return boolean Success/Fail
  */
 function adobeconnect_update_instance($adobeconnect) {
-    global $DB;
+    global $DB, $USER;
 
     $adobeconnect->timemodified = time();
-    $adobeconnect->id = $adobeconnect->instance;
+    $adobeconnect->id           = $adobeconnect->instance;
+    
+    $meetfldscoid = '';
 
     $aconnect = aconnect_login();
 
@@ -275,7 +278,7 @@ function adobeconnect_update_instance($adobeconnect) {
     $urlmatches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
     if (empty($urlmatches)) {
-        $urlmatches = array();
+            $urlmatches = array();
     } else {
         // format url for comparison
         if ((false === strpos($url, '/')) or (0 != strpos($url, '/'))) {
@@ -353,7 +356,22 @@ function adobeconnect_update_instance($adobeconnect) {
             //  $meetingobj->meeturl = $data['meeturl'] . '_' . $group->name;
             $meetingobj->starttime = date('c', $adobeconnect->starttime);
             $meetingobj->endtime = date('c', $adobeconnect->endtime);
+            
+            /* if the userid is not empty then set the meeting folder sco id to 
+               the user's connect folder.  If this line of code is not executed
+               then user's meetings that were previously in the user's connect folder
+               would be moved into the shared folder */
+            if (!empty($adobeconnect->userid)) {
+                
+                $username = get_connect_username($adobeconnect->userid);
+                $user_folder = aconnect_get_user_folder_sco_id($aconnect, $username);
+                
+                if (!empty($user_folder)) {
+                    $meetfldscoid = $user_folder;
+                }
 
+            }
+            
             // Update each meeting instance
             if (!aconnect_update_meeting($aconnect, $meetingobj, $meetfldscoid)) {
                 debugging('error updating meeting', DEBUG_DEVELOPER);

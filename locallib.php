@@ -1399,11 +1399,33 @@ function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
                 }
             }
         }
-//        $params = array('action' => 'sco-contents', 'sco-id' => $folderscoid);
     }
     
     return $scoid;
 }
+
+/**
+ * This function returns the user's adobe connect login username based off of
+ * the adobe connect module's login configuration settings (Moodle username or
+ * Moodle email)
+ * 
+ * @param int userid
+ * @return mixed - user's login username or false if something bad happened
+ */ 
+function get_connect_username($userid) {
+    global $DB;
+    
+    $username = '';
+    $param    = array('id' => $userid);
+    $record   = $DB->get_record('user', $param, 'id,username,email');
+
+    if (!empty($userid) && !empty($record)) {
+        $username = set_username($record->username, $record->email);
+    }
+    
+    return $username;
+}
+
 /**
  * TEST FUNCTIONS - DELETE THIS AFTER COMPLETION OF TEST
  */

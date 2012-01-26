@@ -78,6 +78,9 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'tempenable');
         $mform->setType('type', PARAM_INT);
 
+        $mform->addElement('hidden', 'userid');
+        $mform->setType('type', PARAM_INT);
+
         // Start and end date selectors
         $time       = time();
         $starttime  = usertime($time);

@@ -92,22 +92,36 @@ foreach ($crsroles as $roleid => $crsrole) {
 if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     $usrprincipal = 0;
-    $validuser = true;
-    $groupobj = groups_get_group($groupid);
+    $validuser    = true;
+    $groupobj     = groups_get_group($groupid);
 
     // Get the meeting sco-id
-    $param = array('instanceid' => $cm->instance, 'groupid' => $groupid);
+    $param        = array('instanceid' => $cm->instance, 'groupid' => $groupid);
     $meetingscoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid', $param);
 
     $aconnect = aconnect_login();
 
     // Check if the meeting still exists on the Adobe server
     $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
-    $filter = array('filter-sco-id' => $meetingscoid);
-    $meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+    $filter       = array('filter-sco-id' => $meetingscoid);
+    $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
     if (!empty($meeting)) {
         $meeting = current($meeting);
+    } else {
+        
+        /* First check if the module instance has a user associated with it
+           if so, then check the user's adobe connect folder for existince of the meeting */
+        if (!empty($adobeconnect->userid)) {
+            $username     = get_connect_username($adobeconnect->userid);
+            $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+            $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+            
+            if (!empty($meeting)) {
+                $meeting = current($meeting);
+            }
+
+        }
     }
 
     if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {

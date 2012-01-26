@@ -283,14 +283,21 @@ $filter = array('filter-sco-id' => $scoid);
 if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
     $meeting = current($meeting);
 } else {
+
+    /* First check if the module instance has a user associated with it
+       if so, then check the user's adobe connect folder for existince of the meeting */
+    if (!empty($adobeconnect->userid)) {
+        $username     = get_connect_username($adobeconnect->userid);
+        $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+        $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+        
+        if (!empty($meeting)) {
+            $meeting = current($meeting);
+        }
+    }
     
-    // If the user's meeting doesn't exist in the shared folder, check their personal adobe
-    // connect folder
-    $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $usrobj->username);
-    
-    if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
-        $meeting = current($meeting);
-    } else {
+    // If meeting does not exist then display an error message
+    if (empty($meeting)) {
 
         $message = get_string('nomeeting', 'adobeconnect');
         echo $OUTPUT->notification($message);
