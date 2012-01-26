@@ -132,8 +132,11 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $namematches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);        
         
         /// Search the user's adobe connect folder
-        $usr_fldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
-        $namematches = $namematches + aconnect_meeting_exists($aconnect, $usr_fldscoid, $filter);
+        $usrfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+
+	if (!empty($usrfldscoid)) {
+        	$namematches = $namematches + aconnect_meeting_exists($aconnect, $usrfldscoid, $filter);
+        }
         
         if (empty($namematches)) {
             $namematches = array();
@@ -153,7 +156,9 @@ class mod_adobeconnect_mod_form extends moodleform_mod {
         $urlmatches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
         
         /// Search the user's adobe connect folder
-        $urlmatches = $urlmatches + aconnect_meeting_exists($aconnect, $usr_fldscoid, $filter);
+        if (!empty($usrfldscoid)) {
+            $urlmatches = $urlmatches + aconnect_meeting_exists($aconnect, $usrfldscoid, $filter);
+        }
 
         if (empty($urlmatches)) {
             $urlmatches = array();
