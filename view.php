@@ -56,9 +56,7 @@ global $CFG, $USER;
 $usrobj = new stdClass();
 $usrobj = clone($USER);
 
-if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
-    $usrobj->username = $usrobj->email;
-}
+$usrobj->username = set_username($usrobj->username, $usrobj->email);
 
 /// Print the page header
 $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
@@ -266,16 +264,33 @@ if ($cm->groupmode) {
 $aconnect = aconnect_login();
 
 // Get the Meeting details
-$scoid = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
+$scoid        = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
 $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
-$filter = array('filter-sco-id' => $scoid);
+$filter       = array('filter-sco-id' => $scoid);
 
 if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
     $meeting = current($meeting);
 } else {
-    notice(get_string('nomeeting', 'adobeconnect'), '', $course);
-    aconnect_logout($aconnect);
-    die();
+    
+    /* First check if the module instance has a user associated with it
+       if so, then check the user's adobe connect folder for existince of the meeting */
+    if (!empty($adobeconnect->userid)) {
+        $username     = get_connect_username($adobeconnect->userid);
+        $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+        $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+
+        if (!empty($meeting)) {
+            $meeting = current($meeting);
+        }
+    }
+
+    // If meeting does not exist then display an error message
+    if (empty($meeting)) {
+        notice(get_string('nomeeting', 'adobeconnect'), '', $course);
+        aconnect_logout($aconnect);
+        die();
+    }
+
 }
 
 

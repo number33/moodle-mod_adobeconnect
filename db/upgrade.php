@@ -49,6 +49,18 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
     }
 
 
+    if ($result && $oldversion < 2012012600) {
+        $table = new XMLDBTable('adobeconnect');
+
+        $field = new XMLDBField('userid');
+        $field->setAttributes(XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, false, false, false, '0', 'introformat');
+        
+        if (!field_exists($table, $field)) {
+            $result = $result && add_field($table, $field);
+        }
+    
+    }
+
     return $result;
 }
 

@@ -1277,6 +1277,90 @@ function login_moodle_user($username, $return_session = true) {
 }
 
 /**
+ * This function accepts a username and an email and returns the user's
+ * adobe connect user name, depending on the module's configuration settings
+ * 
+ * @param string - moodle username
+ * @param string - moodle email
+ * 
+ * @return string - user's adobe connect user name
+ */
+function set_username($username, $email) {
+    global $CFG;
+    
+    if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+        return $email;
+    } else {
+        return $username;
+    }
+}
+
+/**
+ * This function search through the user-meetings folder for a folder named
+ * after the user's login name and returns the sco-id of the user's folder
+ * 
+ * @param obj - adobe connection connection object
+ * @param string - the name of the user's folder
+ * @return mixed - sco-id of the user folder (int) or false if no folder exists
+ * 
+ */
+function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
+
+    $scoid   = false;
+    $usr_meet_scoid = aconnect_get_folder($aconnect, 'user-meetings');
+    
+    if (empty($usr_meet_scoid)) {
+        return $scoid;
+    }
+    
+    $params = array('action' => 'sco-expanded-contents',
+                    'sco-id' => $usr_meet_scoid,
+                    'filter-name' => $folder_name);
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
+    
+        $domnodelist = $dom->getElementsByTagName('sco');
+    
+        if (!empty($domnodelist->length)) {
+            if ($domnodelist->item(0)->hasAttributes()) {
+                $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
+    
+                if (!is_null($domnode)) {
+                    $scoid = (int) $domnode->nodeValue;
+                }
+            }
+        }
+    }
+    
+    return $scoid;
+}
+
+/**
+ * This function returns the user's adobe connect login username based off of
+ * the adobe connect module's login configuration settings (Moodle username or
+ * Moodle email)
+ * 
+ * @param int userid
+ * @return mixed - user's login username or false if something bad happened
+ */ 
+function get_connect_username($userid) {
+    
+    $username = false;
+    $record   = get_record('user', 'id', $userid, '', '', '', '', 'id,username,email');
+
+    if (!empty($userid) && !empty($record)) {
+        $username = set_username($record->username, $record->email);
+    }
+    
+    return $username;
+}
+
+/**
  * This function is primarily used for debugging.  Do not use if you don't know
  * what you are doing
  */
@@ -1290,73 +1374,4 @@ function make_api_call($aconnect, $params = array()) {
     }
 }
 
-//function get_nonparticipant_users($instanceid, $courseid, $groupid = 0) {
-//    global $CFG;
-//
-//    $context = get_context_instance(CONTEXT_COURSE, $courseid);
-//    $roles = get_roles_with_capability('moodle/legacy:student', CAP_ALLOW, $context);
-//    $users = array();
-//
-//    if (empty($roles)) {
-//        return array();
-//    }
-//
-//    $role = current($roles);
-//
-//    if ($groupid) {
-//      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC', true, $groupid);
-//    } else { // GET USER
-//      $users = get_role_users($role->id, $context, false, 'u.id,u.firstname,u.lastname,u.username,u.email', 'u.lastname ASC');
-//    }
-//
-//    if (empty($users) ) {
-//        $users = array();
-//    }
-//
-//    $sql = "SELECT amu.userid, amu.roleid FROM ".
-//           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-//           "{$CFG->prefix}adobeconnect_meeting_groups amg ".
-//           "ON amu.meetgroupid = amg.id WHERE ".
-//           " amg.instanceid = $instanceid AND amg.groupid = $groupid";
-//
-//    $participants = get_records_sql($sql);
-//
-//    if (empty($participants)) {
-//        $participants = array();
-//    }
-//
-//    foreach($users as $key => $user) {
-//        foreach($participants as $participant) {
-//            if ($user->id == $participant->userid) {
-//                unset($users[$key]);
-//            }
-//        }
-//    }
-//
-//    return $users;
-//}
-//
-//function get_participant_users($instanceid, $groupid) {
-//    global $CFG;
-//
-//    $participants = array();
-//
-//
-//    $sql = "SELECT amu.userid, amu.roleid, u.firstname, u.lastname, u.username, u.email FROM ".
-//           "{$CFG->prefix}adobeconnect_meeting_users amu JOIN ".
-//           "{$CFG->prefix}user u ON u.id = amu.userid JOIN ".
-//           "{$CFG->prefix}adobeconnect_meeting_groups amg ON ".
-//           " amg.id = amu.meetgroupid WHERE ".
-//           " amg.instanceid = $instanceid AND amg.groupid = $groupid".
-//           " AND u.deleted = 0 ORDER BY u.lastname ASC";
-//
-//
-//    $participants = get_records_sql($sql);
-//
-//    if (empty($participants)) {
-//        $participants = array();
-//    }
-//
-//    return $participants;
-//}
 ?>
