@@ -110,6 +110,19 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     if (!empty($meeting)) {
         $meeting = current($meeting);
+    } else {
+        /* First check if the module instance has a user associated with it
+           if so, then check the user's adobe connect folder for existince of the meeting */
+        if (!empty($adobeconnect->userid)) {
+            $username     = get_connect_username($adobeconnect->userid);
+            $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+            $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
+
+            if (!empty($meeting)) {
+                $meeting = current($meeting);
+            }
+
+        }
     }
 
     if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
