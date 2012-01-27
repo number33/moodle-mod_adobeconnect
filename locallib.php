@@ -279,7 +279,7 @@ function aconnect_get_folder_sco_id($xml, $folder) {
 
     $domnodelist = $dom->getElementsByTagName('sco');
 
-    if (!empty($domnodelist->length)) {
+    if (isset($domnodelist->length) && $domnodelist->length) {
 
         for ($i = 0; $i < $domnodelist->length; $i++) {
 
@@ -458,13 +458,13 @@ function aconnect_get_shared_templates($xml) {
 
     $domnodelist = $dom->getElementsByTagName('shortcuts');
 
-    if (!empty($domnodelist->length)) {
+    if (isset($domnodelist->length) && $domnodelist->length) {
 
 //        for ($i = 0; $i < $domnodelist->length; $i++) {
 
             $innerlist = $domnodelist->item(0)->getElementsByTagName('sco');
 
-            if (!empty($innerlist->length)) {
+            if (isset($innerlist->length) && $innerlist->length) {
 
                 for ($x = 0; $x < $innerlist->length; $x++) {
 
@@ -524,11 +524,11 @@ function aconnect_return_all_templates($xml) {
 
     $domnodelist = $dom->getElementsByTagName('expanded-scos');
 
-    if (!empty($domnodelist->length)) {
+    if (isset($domnodelist->length) && $domnodelist->length) {
 
         $innerlist = $domnodelist->item(0)->getElementsByTagName('sco');
 
-        if (!empty($innerlist->length)) {
+        if (isset($innerlist->length) && $innerlist->length) {
 
             for ($i = 0; $i < $innerlist->length; $i++) {
 
@@ -599,13 +599,13 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid, $filters
 
         $domnodelist = $dom->getElementsByTagName('scos');
 
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
 
 //            for ($i = 0; $i < $domnodelist->length; $i++) {
 
                 $innernodelist = $domnodelist->item(0)->getElementsByTagName('sco');
 
-                if (!empty($innernodelist->length)) {
+                if (isset($innernodelist->length) && $innernodelist->length) {
 
                     for ($x = 0; $x < $innernodelist->length; $x++) {
 
@@ -684,7 +684,7 @@ function aconnect_get_meeting_scoid($xml) {
 
     $domnodelist = $dom->getElementsByTagName('sco');
 
-    if (!empty($domnodelist->length)) {
+    if (isset($domnodelist->length) && $domnodelist->length) {
         if ($domnodelist->item(0)->hasAttributes()) {
             $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
 
@@ -880,11 +880,11 @@ function aconnect_meeting_exists($aconnect, $meetfldscoid, $filter = array()) {
 
         $domnodelist = $dom->getElementsByTagName('scos');
 
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
 
             $innernodelist = $domnodelist->item(0)->getElementsByTagName('sco');
 
-            if (!empty($innernodelist->length)) {
+            if (isset($innernodelist->length) && $innernodelist->length) {
 
                 for ($i = 0; $i < $innernodelist->length; $i++) {
 
@@ -949,10 +949,10 @@ function aconnect_get_user_principal_id($xml) {
 
     $domnodelist = $dom->getElementsByTagName('principal-list');
 
-    if (!empty($domnodelist->length)) {
+    if (isset($domnodelist->length) && $domnodelist->length) {
         $domnodelist = $domnodelist->item(0)->getElementsByTagName('principal');
 
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
             if ($domnodelist->item(0)->hasAttributes()) {
                 $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
 
@@ -1048,7 +1048,7 @@ function aconnect_create_user($aconnect, $usrdata) {
 
         $domnodelist = $dom->getElementsByTagName('principal');
 
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
             if ($domnodelist->item(0)->hasAttributes()) {
                 $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
 
@@ -1153,10 +1153,10 @@ function aconnect_check_user_perm($aconnect, $usrprincipal, $meetingscoid, $role
 
         $domnodelist = $dom->getElementsByTagName('permissions');
 
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
             $domnodelist = $domnodelist->item(0)->getElementsByTagName('principal');
 
-            if (!empty($domnodelist->length)) {
+            if (isset($domnodelist->length) && $domnodelist->length) {
                 $hasperm = true;
             }
         }
@@ -1326,7 +1326,7 @@ function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
     
         $domnodelist = $dom->getElementsByTagName('sco');
     
-        if (!empty($domnodelist->length)) {
+        if (isset($domnodelist->length) && $domnodelist->length) {
             if ($domnodelist->item(0)->hasAttributes()) {
                 $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
     
