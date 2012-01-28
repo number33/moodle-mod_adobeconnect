@@ -115,5 +115,5 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
 }
 
 
-//redirect($protocol . $CFG->adobeconnect_meethost . $port
-//                     . $recordings[$recordingid]->url . '?session=' . $adobesession);
+redirect($protocol . $CFG->adobeconnect_meethost . $port
+                     . $recordings[$recordingid]->url . '?session=' . $adobesession);
