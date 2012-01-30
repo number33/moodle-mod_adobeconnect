@@ -16,6 +16,7 @@ require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id         = required_param('id', PARAM_INT);
 $groupid    = required_param('groupid', PARAM_INT);
+$recscoid   = required_param('recording', PARAM_INT);
 
 global $CFG, $USER, $DB;
 
@@ -62,7 +63,7 @@ $sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
        "amg.instanceid = :instanceid AND amg.groupid = :groupid";
 
 
-$meetscoids = $DB->get_record_sql($sql, $params);
+$meetscoid = $DB->get_record_sql($sql, $params);
 
 // Get the Meeting recording details
 $aconnect   = aconnect_login();
@@ -71,15 +72,17 @@ $fldid      = aconnect_get_folder($aconnect, 'content');
 
 $data = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
 
-if (!empty($data)) {
-    $recording = $data;
-}
+if (!empty($data) && array_key_exists($recscoid, $data)) {
 
-// If at first you don't succeed ...
-$data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+    $recording = $data[$recscoid];
+} else {
 
-if (!empty($data2)) {
-     $recording = $data2;
+    // If at first you don't succeed ...
+    $data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+
+    if (!empty($data2) && array_key_exists($recscoid, $data2)) {
+        $recording = $data2[$recscoid];
+    }
 }
 
 aconnect_logout($aconnect);
@@ -102,3 +105,4 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
 
 redirect($protocol . $CFG->adobeconnect_meethost . $port
                      . $recording->url . '?session=' . $adobesession);
+print_object($recording);die();
