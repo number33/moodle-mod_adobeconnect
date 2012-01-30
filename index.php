@@ -65,27 +65,15 @@ if ($course->format == 'weeks') {
     $table->align = array ('left', 'left', 'left');
 }
 
-$groups = groups_get_user_groups($course->id, $USER->id);
-$groupid = '';
-$groupmode = '';
-
-if (array_key_exists(0, $groups)) {
-    $groupid = '&amp;group='.current($groups[0]);
-}
 
 foreach ($adobeconnects as $adobeconnect) {
-    $group = $groupid;
-
-    if (0 == $adobeconnect->groupmode) {
-        $group = '&amp;group=0';
-    }
 
     if (!$adobeconnect->visible) {
         //Show dimmed if the mod is hidden
-        $link = '<a class="dimmed" href="view.php?id='.$adobeconnect->coursemodule.$group.'">'.format_string($adobeconnect->name).'</a>';
+        $link = '<a class="dimmed" href="view.php?id='.$adobeconnect->coursemodule.'">'.format_string($adobeconnect->name).'</a>';
     } else {
         //Show normal if the mod is visible
-        $link = '<a href="view.php?id='.$adobeconnect->coursemodule.$group.'">'.format_string($adobeconnect->name).'</a>';
+        $link = '<a href="view.php?id='.$adobeconnect->coursemodule.'">'.format_string($adobeconnect->name).'</a>';
     }
 
     if ($course->format == 'weeks' or $course->format == 'topics') {
