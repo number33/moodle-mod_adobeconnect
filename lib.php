@@ -33,7 +33,7 @@ $adobeconnect_EXAMPLE_CONSTANT = 42;     /// for example
  */
 function adobeconnect_add_instance($adobeconnect) {
 
-    global $COURSE, $USER;
+    global $COURSE, $USER, $CFG;
 
     $adobeconnect->timecreated  = time();
     $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
@@ -57,6 +57,7 @@ function adobeconnect_add_instance($adobeconnect) {
     $recid = insert_record('adobeconnect', $adobeconnect);
 
     if (empty($recid)) {
+        debugging('Inserting adobeconnect record failed.', DEBUG_DEVELOPER);
         return false;
     }
 
@@ -66,9 +67,13 @@ function adobeconnect_add_instance($adobeconnect) {
     $meeting = clone $adobeconnect;
 
     if (0 != $adobeconnect->groupmode) { // Allow for multiple groups
-
+        
         // get all groups for the course
-        $crsgroups = groups_get_all_groups($COURSE->id);
+        if (empty($CFG->enablegroupings)) {
+            $adobeconnect->groupingid = 0;
+        }
+        // get all groups for the course within specified grouping
+        $crsgroups = groups_get_all_groups($COURSE->id, 0, $adobeconnect->groupingid);
 
         if (empty($crsgroups)) {
             return;
@@ -182,11 +187,11 @@ function adobeconnect_add_instance($adobeconnect) {
         if (!empty($meeting)) {
             $meeting = current($meeting);
 
-        $record = new stdClass();
-        $record->id = $recid;
-        $record->meeturl = trim($meeting->url, '/');
-        update_record('adobeconnect', $record);
-    }
+            $record = new stdClass();
+            $record->id = $recid;
+            $record->meeturl = trim($meeting->url, '/');
+            update_record('adobeconnect', $record);
+        }
     }
 
     aconnect_logout($aconnect);
@@ -195,7 +200,6 @@ function adobeconnect_add_instance($adobeconnect) {
 //    print_object('---');
 //    print_object($crsgroups);
 //    print_object('---');
-//    print_object($COURSE);
 //    die();
 
     return $recid;
