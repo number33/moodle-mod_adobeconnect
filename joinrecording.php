@@ -88,7 +88,7 @@ if (!empty($data) && array_key_exists($recscoid, $data)) {
 aconnect_logout($aconnect);
 
 if (empty($recording) and confirm_sesskey()) {
-    notify(get_string('errormeeting', 'adobeconnect'));
+    notify(get_string('errorrecording', 'adobeconnect'));
     die();
 }
 
@@ -105,4 +105,3 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
 
 redirect($protocol . $CFG->adobeconnect_meethost . $port
                      . $recording->url . '?session=' . $adobesession);
-print_object($recording);die();
