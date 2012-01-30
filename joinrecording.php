@@ -14,8 +14,9 @@ require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/connect_class.php');
 require_once(dirname(__FILE__).'/connect_class_dom.php');
 
-$id         = required_param('id', PARAM_INT);
-$groupid    = required_param('groupid', PARAM_INT);
+$id          = required_param('id', PARAM_INT);
+$groupid     = required_param('groupid', PARAM_INT);
+$recscoid    = required_param('recording', PARAM_INT);
 
 // Do the usual Moodle setup
 if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
@@ -72,15 +73,16 @@ $fldid      = aconnect_get_folder($aconnect, 'content');
 
 $data = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
 
-if (!empty($data)) {
-    $recording = $data;
-}
+if (!empty($data) && array_key_exists($recscoid, $data)) {
 
-// If at first you don't succeed ...
-$data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+    $recording = $data[$recscoid];
+} else {// If at first you don't succeed ...
 
-if (!empty($data2)) {
-     $recording = $data2;
+    $data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+    
+    if (!empty($data2) && array_key_exists($recscoid, $data2)) {
+        $recording = $data2[$recscoid];
+    }
 }
 
 aconnect_logout($aconnect);
@@ -100,8 +102,6 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
     $port = ':' . $CFG->adobeconnect_port;
 }
 
-
 redirect($protocol . $CFG->adobeconnect_meethost . $port
                      . $recording->url . '?session=' . $adobesession);
-
 ?>
