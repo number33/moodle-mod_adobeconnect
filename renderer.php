@@ -187,7 +187,7 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
         $param = array('class' => 'aconbtnjoin');
         $html .= html_writer::start_tag('div', $param);
 
-        $param = array('id' => $cmid, 'sesskey' => sesskey(), 'groupid' => 0);
+        $param = array('id' => $cmid, 'sesskey' => sesskey(), 'groupid' => $groupid);
         $target = new moodle_url('/mod/adobeconnect/join.php', $param);
 
         $param = array('type'=>'button',
@@ -258,7 +258,8 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
                            '&groupid='. $groupid . '&sesskey=' . $USER->sesskey;
 
                     $param = array('target' => '_blank');
-                    $html .= html_writer::link($url, format_string($recording->name), $param);
+                    $name = html_entity_decode($recording->name);
+                    $html .= html_writer::link($url, format_string($name), $param);
 
                     $html .= html_writer::end_tag('div');
 
@@ -272,5 +273,10 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
 
         return $html;
         //$html .= html_writer::link($url, get_string('removemychoice','choice'));
+    }
+    
+    function display_no_groups_message() {
+        $html = html_writer::tag('p', get_string('usergrouprequired', 'adobeconnect'));
+        return $html;
     }
 }

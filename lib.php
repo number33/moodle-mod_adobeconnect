@@ -89,16 +89,18 @@ function adobeconnect_add_instance($adobeconnect) {
         if (role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect')) {
             //DEBUG
         } else {
-            echo 'role assignment failed'; die();
+            debugging('role assignment failed', DEBUG_DEVELOPER);
+            return false;
         }
     }
 
     $recid = $DB->insert_record('adobeconnect', $adobeconnect);
 
     if (empty($recid)) {
+        debugging('creating adobeconnect module instance failed', DEBUG_DEVELOPER);
         return false;
     }
-
+    
     $aconnect = aconnect_login();
     
     // Get the user's meeting folder location, if non exists then get the shared
@@ -120,19 +122,13 @@ function adobeconnect_add_instance($adobeconnect) {
         }
 
         require_once(dirname(dirname(dirname(__FILE__))).'/group/lib.php');
+
         // Create the meeting for each group
         foreach($crsgroups as $crsgroup) {
 
             // The teacher role if they don't already have one and
             // Assign them to each group
             if (!groups_is_member($crsgroup->id, $USER->id)) {
-
-                $param = array('shortname' => 'editingteacher');
-                $roleid = $DB->get_field('role', 'id', $param);
-
-                if (!user_has_role_assignment($USER->id, $roleid, $context->id)) {
-                    role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect');
-                }
 
                 groups_add_member($crsgroup->id, $USER->id);
 
@@ -144,8 +140,12 @@ function adobeconnect_add_instance($adobeconnect) {
                 $meeting->meeturl = adobeconnect_clean_meet_url($adobeconnect->meeturl   . '_' . $crsgroup->name);
             }
 
+            // If creating the meeting failed, then return false and revert the group role assignments
             if (!$meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid)) {
+                
+                groups_remove_member($crsgroup->id, $USER->id);
                 debugging('error creating meeting', DEBUG_DEVELOPER);
+                return false;
             }
 
             // Update permissions for meeting
@@ -185,7 +185,13 @@ function adobeconnect_add_instance($adobeconnect) {
 
     } else { // no groups support
         $meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid);
-
+        
+        // If creating the meeting failed, then return false and revert the group role assignments
+        if (!$meetingscoid) {
+            debugging('error creating meeting', DEBUG_DEVELOPER);
+            return false;
+        }
+        
         // Update permissions for meeting
         if (empty($adobeconnect->meetingpublic)) {
             aconnect_update_meeting_perm($aconnect, $meetingscoid, ADOBE_MEETPERM_PRIVATE);

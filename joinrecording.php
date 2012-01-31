@@ -88,7 +88,7 @@ if (!empty($data) && array_key_exists($recscoid, $data)) {
 aconnect_logout($aconnect);
 
 if (empty($recording) and confirm_sesskey()) {
-    notify(get_string('errorrecording', 'adobeconnect'));
+    notify(get_string('errormeeting', 'adobeconnect'));
     die();
 }
 

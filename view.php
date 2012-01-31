@@ -17,9 +17,9 @@ require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $a  = optional_param('a', 0, PARAM_INT);  // adobeconnect instance ID
-$groupid = optional_param('group', 0, PARAM_INT);
+$groupid = optional_param('group', -1, PARAM_INT);
 
-global $CFG, $USER, $DB, $PAGE, $OUTPUT;
+global $CFG, $USER, $DB, $PAGE, $OUTPUT, $SESSION;
 
 if ($id) {
     if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
@@ -86,9 +86,6 @@ $usrobj->username = set_username($usrobj->username, $usrobj->email);
 
 /// Print the page header
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
-if ($groupid) {
-    $url->param('group', $groupid);
-}
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -99,34 +96,6 @@ echo $OUTPUT->header();
 
 $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect  = get_string('modulename', 'adobeconnect');
-
-// Check for empty group id, if empty check if this user belongs to any
-// group in the course and set the first group found as the default.
-// This is required for the groups selection drop down box and for the
-// initial display of the meeting details.
-if (0 != $cm->groupmode){
-    if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $usrobj->id);
-        if (array_key_exists(0, $groups)) {
-            $groupid = current($groups[0]);
-        }
-
-        if (empty($groupid)) {
-
-            $groupid = 0;
-            $message = get_string('usergrouprequired', 'adobeconnect');
-            echo $OUTPUT->notification($message);
-            echo $OUTPUT->footer();
-            die();
-        }
-    }
-} else {
-    $groupid = 0;
-}
-
-/// Print the main part of the page
-$usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
-$usrgroups = $usrgroups[0]; // Just want groups and not groupings
 
 $params = array('instanceid' => $cm->instance);
 $sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
@@ -264,10 +233,50 @@ $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_po
 $aconnect->request_http_header_login(1, $login);
 $adobesession = $aconnect->get_cookie();
 
+// The batch of code below handles the display of Moodle groups
 if ($cm->groupmode) {
-    // Not sure if this is needed anymore...
-    groups_print_course_menu($course, "view.php?id=$id");
+
+    $querystring = array('id' => $cm->id);
+    $url = new moodle_url('/mod/adobeconnect/view.php', $querystring);
+
+    // Retrieve a list of groups that the current user can see/manage
+    $user_groups = groups_get_activity_allowed_groups($cm, $USER->id);
+
+    if ($user_groups) {
+
+        // Print groups selector drop down
+        groups_print_activity_menu($cm, $url, false, true);
+
+
+        // Retrieve the currently active group for the user's session
+        $groupid = groups_get_activity_group($cm);
+
+        /* Depending on the series of events groups_get_activity_group will 
+         * return a groupid value of  0 even if the user belongs to a group.
+         * If the groupid is set to 0 then use the first group that the user
+         * belongs to.
+         */
+        $aag = has_capability('moodle/site:accessallgroups', $context);
+        
+        if (0 == $groupid) {
+            $groups = groups_get_user_groups($cm->course, $USER->id);
+            $groups = current($groups);
+
+            if (!empty($groups)) {
+
+                $groupid = key($SESSION->activegroup[$cm->course]);
+            } elseif ($aag) {
+                /* If the user does not explicitely belong to any group
+                 * check their capabilities to see if they have access
+                 * to manage all groups; and if so display the first course
+                 * group by default
+                 */
+                $groupid = key($user_groups);
+            }
+        }
+    }
 }
+
 
 $aconnect = aconnect_login();
 
@@ -313,7 +322,7 @@ $sesskey = !empty($usrobj->sesskey) ? $usrobj->sesskey : '';
 $renderer = $PAGE->get_renderer('mod_adobeconnect');
 
 $meetingdetail = new stdClass();
-$meetingdetail->name = $meeting->name;
+$meetingdetail->name = html_entity_decode($meeting->name);
 
 // Determine if the Meeting URL is to appear
 if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
@@ -373,8 +382,14 @@ $meetingdetail->introformat = $adobeconnect->introformat;
 
 echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
-// Echo the rendered HTML to the page
-echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
+// If groups mode is enabled for the activity but the user is not in any groups then display a message
+if (NOGROUPS < $cm->groupmode && 0 < $groupid) {
+
+    echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
+} else {
+    
+    echo $renderer->display_no_groups_message();
+}
 
 echo $OUTPUT->box_end();
 
@@ -393,13 +408,15 @@ if (!$adobeconnect->meetingpublic) {
 
 $recordings = $recording;
 
-if ($showrecordings and !empty($recordings)) {
-    echo $OUTPUT->box_start('generalbox', 'meetingsummary');
-
-    // Echo the rendered HTML to the page
-    echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
-
-    echo $OUTPUT->box_end();
+if (NOGROUPS < $cm->groupmode && 0 != $groupid) {
+    if ($showrecordings and !empty($recordings)) {
+        echo $OUTPUT->box_start('generalbox', 'meetingsummary');
+    
+        // Echo the rendered HTML to the page
+        echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
+    
+        echo $OUTPUT->box_end();
+    }
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',

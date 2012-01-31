@@ -40,23 +40,16 @@ $usrobj = new stdClass();
 $usrobj = clone($USER);
 $usrobj->username = set_username($usrobj->username, $usrobj->email);
 
-if (0 != $cm->groupmode){
+if (NOGROUPS != $cm->groupmode){
 
     if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $usrobj->id);
-
-        if (array_key_exists(0, $groups)) {
-            $groupid = current($groups[0]);
-        }
-
-        if (empty($groupid)) {
-            $groupid = 0;
-            notify(get_string('usergrouprequired', 'adobeconnect'));
-            print_footer($course);
-            die();
-        }
+        $groupid = 0;
+        notify(get_string('usergrouprequired', 'adobeconnect'));
+        print_footer($course);
+        die();
 
     }
+
 } else {
     $groupid = 0;
 }
@@ -67,12 +60,20 @@ $usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
 $usrgroups = $usrgroups[0]; // Just want groups and not groupings
 
 // If separate groups is enabled, check if the user is a part of the selected group
-if (0 != $cm->groupmode/*$adobeconnect->meetingpublic*/) {
-    if (false !== array_search($groupid, $usrgroups)) {
+if (NOGROUPS != $cm->groupmode) {
+
+    $group_exists = false !== array_search($groupid, $usrgroups);
+    $context      = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $aag          = has_capability('moodle/site:accessallgroups', $context);
+
+    if ($group_exists || $aag) {
         $usrcanjoin = true;
     }
 }
 
+// TODO: CHANGE - MODIFY THIS BLOCK SO THAT ONLY USERS WHO ARE A PART OF THE GROUP CAN JOIN
+// UPDATE THE CODE, TO LOOK FOR MORE THAN JUST A ROLE WIHIN THE COURSE
+// TEST FOR USE CASE: USER WHO IS NOT A PART OF THE GROUP ATTEMPTS TO JOIN
 $context = get_context_instance(CONTEXT_COURSE, $cm->course);
 
 // Make sure the user has a role in the course
@@ -85,15 +86,16 @@ if (empty($crsroles)) {
 foreach ($crsroles as $roleid => $crsrole) {
     if (user_has_role_assignment($usrobj->id, $roleid, $context->id)) {
         $usrcanjoin = true;
+        print_object($roleid);die();
     }
 }
+// END OF TODO BLOCK
 
 // user has to be in a group
 if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     $usrprincipal = 0;
     $validuser    = true;
-    $groupobj     = groups_get_group($groupid);
 
     // Get the meeting sco-id
     $param        = array('instanceid' => $cm->instance, 'groupid' => $groupid);
