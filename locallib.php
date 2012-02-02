@@ -654,6 +654,8 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid, $filters
                                              $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
 
                                     $recordings[$j]->duration = (string) $value;
+                                    
+                                    $recordings[$j]->sourcesco = (int) $sourcescoid;
                                 }
 
                             }

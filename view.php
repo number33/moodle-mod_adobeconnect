@@ -71,28 +71,50 @@ $navigation = build_navigation($navlinks);
 print_header_simple(format_string($adobeconnect->name), '', $navigation, '', '', true,
               update_module_button($cm->id, $course->id, $stradobeconnect), navmenu($course, $cm));
 
-// Check for empy group id, if empty check if this user belongs to any
-// group in the course and set the first group found as the default.
-// This is required for the groups selection drop down box and for the
-// initial display of the meeting details.
+$context     = get_context_instance(CONTEXT_MODULE, $id);
+$user_groups = array();
 
-if (0 != $cm->groupmode){
-    if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $usrobj->id);
+// The batch of code below handles the display of Moodle groups
+if ($cm->groupmode) {
 
-        if (array_key_exists(0, $groups)) {
-            $groupid = current($groups[0]);
-        }
+    $url = "{$CFG->wwwroot}/mod/adobeconnect/view.php?id=$id";
 
-        if (empty($groupid)) {
-            $groupid = 0;
-            notify(get_string('usergrouprequired', 'adobeconnect'));
-            print_footer($course);
-            die();
+    // Retrieve a list of groups that the current user can see/manage
+    $user_groups = groups_get_activity_allowed_groups($cm, $USER->id);
+
+    if ($user_groups) {
+
+        // Print groups selector drop down
+        groups_print_activity_menu($cm, $url, false, true);
+
+
+        // Retrieve the currently active group for the user's session
+        $groupid = groups_get_activity_group($cm);
+
+        /* Depending on the series of events groups_get_activity_group will 
+         * return a groupid value of  0 even if the user belongs to a group.
+         * If the groupid is set to 0 then use the first group that the user
+         * belongs to.
+         */
+        $aag = has_capability('moodle/site:accessallgroups', $context);
+        
+        if (0 == $groupid) {
+            $groups = groups_get_user_groups($cm->course, $USER->id);
+            $groups = current($groups);
+
+            if (!empty($groups)) {
+
+                $groupid = key($SESSION->activegroup[$cm->course]);
+            } elseif ($aag) {
+                /* If the user does not explicitely belong to any group
+                 * check their capabilities to see if they have access
+                 * to manage all groups; and if so display the first course
+                 * group by default
+                 */
+                $groupid = key($user_groups);
+            }
         }
     }
-} else {
-    $groupid = 0;
 }
 
 /// Print the main part of the page
@@ -152,7 +174,6 @@ if (!empty($meetscoids)) {
         if (!empty($data2)) {
              $recording[] = $data2;
         }
-//        print_object(aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid));
     }
 
     // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when a the
@@ -179,7 +200,8 @@ if (!empty($meetscoids)) {
             }
         }
     }
-
+    
+    unset($names);
 
     // Check if the user exists and if not create the new user
     if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
@@ -196,7 +218,6 @@ if (!empty($meetscoids)) {
     // Check the user's capability and assign them view permissions to the recordings folder
     // if it's a public meeting give them permissions regardless
     if ($cm->groupmode) {
-        $context = get_context_instance(CONTEXT_MODULE, $id);
 
         if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
             has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
@@ -257,14 +278,12 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
     }
 }
 
-if ($cm->groupmode) {
-    groups_print_course_menu($course, "view.php?id=$id");
-}
-
 $aconnect = aconnect_login();
 
 // Get the Meeting details
-$scoid        = get_field('adobeconnect_meeting_groups', 'meetingscoid', 'instanceid', $adobeconnect->id, 'groupid', $groupid);
+$scoid        = get_field('adobeconnect_meeting_groups', 'meetingscoid',
+                          'instanceid', $adobeconnect->id,
+                          'groupid', $groupid);
 $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
 $filter       = array('filter-sco-id' => $scoid);
 
@@ -473,31 +492,40 @@ $recordings = $recording;
 
 if ($showrecordings and !empty($recordings)) {
 
-    echo '<div id="aconfldset2" class="aconfldset">'."\n";
-    echo '<fieldset>'."\n";
-    echo '<legend>'.get_string('recordinghdr', 'adobeconnect').'</legend>'."\n";
-
-    echo '<div class="aconrecording">'."\n";
+    $recording_fieldset = '<div id="aconfldset2" class="aconfldset">'."\n".
+                          '<fieldset>'."\n".
+                          '<legend>'.get_string('recordinghdr', 'adobeconnect').'</legend>'."\n".
+                          '<div class="aconrecording">'."\n";
+    $recording_links = '';
+    
     foreach ($recordings as $key => $recordinggrp) {
 
         if (!empty($recordinggrp)) {
 
             foreach($recordinggrp as $recording_scoid => $recording) {
                 
-                $name = html_entity_decode($recording->name);
-                echo '<div class="aconrecordingrow">'."\n";
-                echo '<a href="joinrecording.php?id=' . $id. '&recording='. $recording_scoid .
-                     '&groupid=' . $groupid . '&sesskey=' . $USER->sesskey .
-                     '" target="_blank">'. format_string($name) .'</a><br />';
-                echo '</div>'."\n";
+                // Check if the recording source matches the currently displayed meeting
+                if ($recording->sourcesco != $scoid) {
+                    continue;
+                }
 
+                $name = html_entity_decode($recording->name);
+                $recording_links .= '<div class="aconrecordingrow">'."\n".
+                                    '<a href="joinrecording.php?id=' . $id. '&recording='. $recording_scoid .
+                                    '&groupid=' . $groupid . '&sesskey=' . $USER->sesskey .
+                                    '" target="_blank">'. format_string($name) .'</a><br />'.
+                                    '</div>'."\n";
             }
         }
     }
-    echo '</div>'."\n";
 
-    echo '</fieldset>'."\n";
-    echo '</div>'."\n";
+    if (!empty($recording_links)) {
+        $recording_fieldset .= $recording_links;
+        $recording_fieldset .= '</div>'."\n".
+                               '</fieldset>'."\n".
+                               '</div>'."\n";
+        echo $recording_fieldset;
+    }
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',
