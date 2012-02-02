@@ -315,8 +315,9 @@ echo '<div class="aconlabeltitle" id="aconmeetnametitle">'."\n";
 echo '<label for="lblmeetingnametitle">'.get_string('meetingname', 'adobeconnect').':</label>'."\n";
 echo '</div>'."\n";
 
+$name = html_entity_decode($meeting->name);
 echo '<div class="aconlabeltext" id="aconmeetnametxt">'."\n";
-echo '<label for="lblmeetingname">'.format_string($meeting->name).'</label><br />'."\n";
+echo '<label for="lblmeetingname">'.format_string($name).'</label><br />'."\n";
 echo '</div>'."\n";
 
 echo '</div>'."\n";
@@ -482,11 +483,12 @@ if ($showrecordings and !empty($recordings)) {
         if (!empty($recordinggrp)) {
 
             foreach($recordinggrp as $recording_scoid => $recording) {
-
+                
+                $name = html_entity_decode($recording->name);
                 echo '<div class="aconrecordingrow">'."\n";
                 echo '<a href="joinrecording.php?id=' . $id. '&recording='. $recording_scoid .
                      '&groupid=' . $groupid . '&sesskey=' . $USER->sesskey .
-                     '" target="_blank">'. format_string($recording->name) .'</a><br />';
+                     '" target="_blank">'. format_string($name) .'</a><br />';
                 echo '</div>'."\n";
 
             }
