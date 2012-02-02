@@ -17,7 +17,7 @@ $groupid  = required_param('groupid', PARAM_INT);
 $sesskey  = required_param('sesskey', PARAM_ALPHANUM);
 
 
-global $CFG, $USER, $DB;
+global $CFG, $USER, $DB, $PAGE;
 
 if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
     error('Course Module ID was incorrect');
@@ -40,56 +40,33 @@ $usrobj = new stdClass();
 $usrobj = clone($USER);
 $usrobj->username = set_username($usrobj->username, $usrobj->email);
 
-if (NOGROUPS != $cm->groupmode){
-
-    if (empty($groupid)) {
-        $groupid = 0;
-        notify(get_string('usergrouprequired', 'adobeconnect'));
-        print_footer($course);
-        die();
-
-    }
-
-} else {
-    $groupid = 0;
-}
-
 $usrcanjoin = false;
 
-$usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
-$usrgroups = $usrgroups[0]; // Just want groups and not groupings
+$context   = get_context_instance(CONTEXT_MODULE, $cm->id);
 
 // If separate groups is enabled, check if the user is a part of the selected group
 if (NOGROUPS != $cm->groupmode) {
 
+    $usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
+    $usrgroups = $usrgroups[0]; // Just want groups and not groupings
+
     $group_exists = false !== array_search($groupid, $usrgroups);
-    $context      = get_context_instance(CONTEXT_MODULE, $cm->id);
     $aag          = has_capability('moodle/site:accessallgroups', $context);
 
     if ($group_exists || $aag) {
         $usrcanjoin = true;
     }
+} else {
+    $usrcanjoin = true;
 }
 
-// TODO: CHANGE - MODIFY THIS BLOCK SO THAT ONLY USERS WHO ARE A PART OF THE GROUP CAN JOIN
-// UPDATE THE CODE, TO LOOK FOR MORE THAN JUST A ROLE WIHIN THE COURSE
-// TEST FOR USE CASE: USER WHO IS NOT A PART OF THE GROUP ATTEMPTS TO JOIN
-$context = get_context_instance(CONTEXT_COURSE, $cm->course);
-
-// Make sure the user has a role in the course
-$crsroles = get_roles_used_in_context($context);
-
-if (empty($crsroles)) {
-    $crsroles = array();
-}
-
-foreach ($crsroles as $roleid => $crsrole) {
-    if (user_has_role_assignment($usrobj->id, $roleid, $context->id)) {
-        $usrcanjoin = true;
-        print_object($roleid);die();
-    }
-}
-// END OF TODO BLOCK
+/// Set page global
+$url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
+ 
+$PAGE->set_url($url);
+$PAGE->set_context($context);
+$PAGE->set_title(format_string($adobeconnect->name));
+$PAGE->set_heading($course->fullname);
 
 // user has to be in a group
 if ($usrcanjoin and confirm_sesskey($sesskey)) {
@@ -103,7 +80,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
 
     $aconnect = aconnect_login();
 
-    // Check if the meeting still exists on the Adobe server
+    // Check if the meeting still exists in the shared folder of the Adobe server
     $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
     $filter       = array('filter-sco-id' => $meetingscoid);
     $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
@@ -112,7 +89,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         $meeting = current($meeting);
     } else {
         
-        /* First check if the module instance has a user associated with it
+        /* Check if the module instance has a user associated with it
            if so, then check the user's adobe connect folder for existince of the meeting */
         if (!empty($adobeconnect->userid)) {
             $username     = get_connect_username($adobeconnect->userid);
@@ -134,8 +111,6 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
             $validuser = false;
         }
     }
-
-    $context = get_context_instance(CONTEXT_MODULE, $id);
 
     // Check the user's capabilities and assign them the Adobe Role
     if (!empty($meetingscoid) and !empty($usrprincipal) and !empty($meeting)) {
@@ -188,14 +163,14 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
         }
     } else {
         $validuser = false;
-        notice(get_string('unableretrdetails', 'adobeconnect'));
+        notice(get_string('unableretrdetails', 'adobeconnect'), $url);
     }
 
     aconnect_logout($aconnect);
 
     // User is either valid or invalid, if valid redirect user to the meeting url
     if (empty($validuser)) {
-        notice(get_string('notparticipant', 'adobeconnect'));
+        notice(get_string('notparticipant', 'adobeconnect'), $url);
     } else {
 
         $protocol = 'http://';
@@ -229,5 +204,5 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                  . '?session=' . $aconnect->get_cookie());
     }
 } else {
-    notice(get_string('usernotenrolled', 'adobeconnect'));
+    notice(get_string('usergrouprequired', 'adobeconnect'), $url);
 }

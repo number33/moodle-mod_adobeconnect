@@ -220,7 +220,18 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
         return $html;
     }
 
-    function display_meeting_recording($recordings, $cmid, $groupid, $adobesession) {
+    /** This function outpus HTML markup with links to Connect meeting recordings.
+     * If a valid groupid is passed it will only display recordings that
+     * are a part of the group
+     * 
+     * @param array - 2d array of recorded meeting and meeting details
+     * @param int - course module id
+     * @param int - group id
+     * @param int - source sco id, used to filter meetings
+     * 
+     * @return string - HTML markup, links to recorded meetings
+     */
+    function display_meeting_recording($recordings, $cmid, $groupid, $sourcescoid) {
         global $CFG, $USER;
 
         $html       = '';
@@ -247,12 +258,14 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
         foreach ($recordings as $key => $recordinggrp) {
             if (!empty($recordinggrp)) {
                 foreach($recordinggrp as $recording_scoid => $recording) {
+                
+                    if ($recording->sourcesco != $sourcescoid) {
+                        continue;
+                    }
 
                     $param = array('class' => 'aconrecordingrow');
                     $html .= html_writer::start_tag('div', $param);
 
-//                    $url = $protocol . $CFG->adobeconnect_meethost.$port
-//                            .$recording->url.'?session='.$adobesession;
 
                     $url = 'joinrecording.php?id=' . $cmid . '&recording='. $recording_scoid .
                            '&groupid='. $groupid . '&sesskey=' . $USER->sesskey;

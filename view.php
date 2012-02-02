@@ -17,7 +17,7 @@ require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $a  = optional_param('a', 0, PARAM_INT);  // adobeconnect instance ID
-$groupid = optional_param('group', -1, PARAM_INT);
+$groupid = optional_param('group', 0, PARAM_INT);
 
 global $CFG, $USER, $DB, $PAGE, $OUTPUT, $SESSION;
 
@@ -98,9 +98,9 @@ $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect  = get_string('modulename', 'adobeconnect');
 
 $params = array('instanceid' => $cm->instance);
-$sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
-       "amg.instanceid = :instanceid";
-
+$sql = "SELECT meetingscoid ". 
+       "FROM {adobeconnect_meeting_groups} amg ".
+       "WHERE amg.instanceid = :instanceid ";
 
 $meetscoids = $DB->get_records_sql($sql, $params);
 $recording = array();
@@ -155,9 +155,9 @@ if (!empty($meetscoids)) {
     }
 
 
-    // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when a the
-    // recording settings on ACP server change between publishing the recording links in meeting folders and
-    // not publishing the recording links in meeting folders
+    // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when the
+    // recording settings on ACP server change between "publishing recording links in meeting folders" and
+    // not "publishing recording links in meeting folders"
     $names = array();
     foreach ($recording as $key => $recordingarray) {
 
@@ -179,6 +179,8 @@ if (!empty($meetscoids)) {
             }
         }
     }
+    
+    unset($names);
 
 
     // Check if the user exists and if not create the new user
@@ -382,12 +384,17 @@ $meetingdetail->introformat = $adobeconnect->introformat;
 
 echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
-// If groups mode is enabled for the activity but the user is not in any groups then display a message
-if (NOGROUPS < $cm->groupmode && 0 < $groupid) {
+// If groups mode is enabled for the activity and the user belongs to a group
+if (NOGROUPS != $cm->groupmode && 0 != $groupid) {
 
     echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
+} elseif (NOGROUPS == $cm->groupmode) { 
+
+    // If groups mode is disabled
+    echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
 } else {
-    
+
+    // If groups mode is enabled but the user is not in a group
     echo $renderer->display_no_groups_message();
 }
 
@@ -398,25 +405,36 @@ echo '<br />';
 $showrecordings = false;
 // Check if meeting is private, if so check the user's capability.  If public show recorded meetings
 if (!$adobeconnect->meetingpublic) {
+
+    // Check capabilities
     if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
         has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
-            $showrecordings = true;
+        $showrecordings = true;
     }
 } else {
+    
+    // Check group mode and group membership
     $showrecordings = true;
+}
+
+// Lastly check group mode and group membership
+if (NOGROUPS != $cm->groupmode && 0 != $groupid) {
+    $showrecordings = $showrecordings && true;
+} elseif (NOGROUPS == $cm->groupmode) {
+    $showrecording = $showrecordings && true;
+} else {
+    $showrecording = $showrecordings && false;
 }
 
 $recordings = $recording;
 
-if (NOGROUPS < $cm->groupmode && 0 != $groupid) {
-    if ($showrecordings and !empty($recordings)) {
-        echo $OUTPUT->box_start('generalbox', 'meetingsummary');
-    
-        // Echo the rendered HTML to the page
-        echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $adobesession);
-    
-        echo $OUTPUT->box_end();
-    }
+if ($showrecordings and !empty($recordings)) {
+    echo $OUTPUT->box_start('generalbox', 'meetingsummary');
+
+    // Echo the rendered HTML to the page
+    echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $scoid);
+
+    echo $OUTPUT->box_end();
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',

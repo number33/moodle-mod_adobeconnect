@@ -585,7 +585,7 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
 
     // Check if meeting scoid and folder scoid are the same
     // If hey are the same then that means that forced recordings is not
-    // enabled filter-source-sco-id should not be included.  If they the
+    // enabled filter-source-sco-id should not be included.  If the
     // meeting scoid and folder scoid are not equal then forced recordings
     // are enabled and we can use filter by filter-source-sco-id
     // Thanks to A. gtdino
@@ -658,6 +658,8 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
                                              $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
 
                                     $recordings[$j]->duration = (string) $value;
+                                    
+                                    $recordings[$j]->sourcesco = (int) $sourcescoid;
                                 }
 
                             }

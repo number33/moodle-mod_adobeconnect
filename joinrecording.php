@@ -69,8 +69,17 @@ $meetscoid = $DB->get_record_sql($sql, $params);
 $aconnect   = aconnect_login();
 $recording  = array();
 $fldid      = aconnect_get_folder($aconnect, 'content');
+$usrcanjoin = false;
+$context    = get_context_instance(CONTEXT_MODULE, $cm->id);
+$data       = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
 
-$data = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
+/// Set page global
+$url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
+ 
+$PAGE->set_url($url);
+$PAGE->set_context($context);
+$PAGE->set_title(format_string($adobeconnect->name));
+$PAGE->set_heading($course->fullname);
 
 if (!empty($data) && array_key_exists($recscoid, $data)) {
 
@@ -90,6 +99,27 @@ aconnect_logout($aconnect);
 if (empty($recording) and confirm_sesskey()) {
     notify(get_string('errormeeting', 'adobeconnect'));
     die();
+}
+
+// If separate groups is enabled, check if the user is a part of the selected group
+if (NOGROUPS != $cm->groupmode) {
+    $usrgroups = groups_get_user_groups($cm->course, $USER
+    ->id);
+    $usrgroups = $usrgroups[0]; // Just want groups and not groupings
+
+    $group_exists = false !== array_search($groupid, $usrgroups);
+    $aag          = has_capability('moodle/site:accessallgroups', $context);
+
+    if ($group_exists || $aag) {
+        $usrcanjoin = true;
+    }
+} else {
+    $usrcanjoin = true;
+}
+
+
+if (!$usrcanjoin) {
+    notice(get_string('usergrouprequired', 'adobeconnect'), $url);
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',
