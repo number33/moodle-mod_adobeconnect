@@ -35,59 +35,32 @@ require_login($course, true, $cm);
 global $CFG, $USER;
 
 // Check if the user's email is the Connect Pro user's login
-$usrobj = new stdClass();
-$usrobj = clone($USER);
+$usrobj     = new stdClass();
+$usrobj     = clone($USER);
+$context    = get_context_instance(CONTEXT_COURSE, $cm->course);
+$usrcanjoin = false;
+
 
 if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
     $usrobj->username = $usrobj->email;
 }
 
-if (0 != $cm->groupmode){
+// If separate groups is enabled, check if the user is a part of the selected group
 
-    if (empty($groupid)) {
-        $groups = groups_get_user_groups($course->id, $usrobj->id);
 
-        if (array_key_exists(0, $groups)) {
-            $groupid = current($groups[0]);
-        }
+if (NOGROUPS != $cm->groupmode) {
 
-        if (empty($groupid)) {
-            $groupid = 0;
-            notify(get_string('usergrouprequired', 'adobeconnect'));
-            print_footer($course);
-            die();
-        }
+    $usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
+    $usrgroups = $usrgroups[0]; // Just want groups and not groupings
 
+    $group_exists = false !== array_search($groupid, $usrgroups);
+    $aag          = has_capability('moodle/site:accessallgroups', $context);
+
+    if ($group_exists || $aag) {
+        $usrcanjoin = true;
     }
 } else {
-    $groupid = 0;
-}
-
-$usrcanjoin = false;
-
-$usrgroups = groups_get_user_groups($cm->course, $usrobj->id);
-$usrgroups = $usrgroups[0]; // Just want groups and not groupings
-
-// If separate groups is enabled, check if the user is a part of the selected group
-if (0 != $cm->groupmode/*$adobeconnect->meetingpublic*/) {
-    if (false !== array_search($groupid, $usrgroups)) {
-        $usrcanjoin = true;
-    }
-}
-
-$context = get_context_instance(CONTEXT_COURSE, $cm->course);
-
-// Make sure the user has a role in the course
-$crsroles = get_roles_used_in_context($context);
-
-if (empty($crsroles)) {
-    $crsroles = array();
-}
-
-foreach ($crsroles as $roleid => $crsrole) {
-    if (user_has_role_assignment($usrobj->id, $roleid, $context->id)) {
-        $usrcanjoin = true;
-    }
+    $usrcanjoin = true;
 }
 
 // user has to be in a group
@@ -227,6 +200,6 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
                  . '?session=' . $aconnect->get_cookie());
     }
 } else {
-    notice(get_string('usernotenrolled', 'adobeconnect'));
+    notice(get_string('usergrouprequired', 'adobeconnect'));
 }
 ?>
