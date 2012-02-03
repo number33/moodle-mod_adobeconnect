@@ -71,9 +71,12 @@ function adobeconnect_add_instance($adobeconnect) {
 
     $adobeconnect->timecreated  = time();
     $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
+    $adobeconnect->userid       = $USER->id;
 
-    $return = false;
-    $meeting = new stdClass();
+    $return       = false;
+    $meeting      = new stdClass();
+    $username     = set_username($USER->username, $USER->email);
+    $meetfldscoid = '';
 
     // Assign the current user with the Adobe Presenter role
     $context = get_context_instance(CONTEXT_COURSE, $adobeconnect->course);
@@ -86,18 +89,26 @@ function adobeconnect_add_instance($adobeconnect) {
         if (role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect')) {
             //DEBUG
         } else {
-            echo 'role assignment failed'; die();
+            debugging('role assignment failed', DEBUG_DEVELOPER);
+            return false;
         }
     }
 
     $recid = $DB->insert_record('adobeconnect', $adobeconnect);
 
     if (empty($recid)) {
+        debugging('creating adobeconnect module instance failed', DEBUG_DEVELOPER);
         return false;
     }
-
+    
     $aconnect = aconnect_login();
-    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    
+    // Get the user's meeting folder location, if non exists then get the shared
+    // meeting folder location
+    $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
+    if (empty($meetfldscoid)) {
+        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    }
 
     $meeting = clone $adobeconnect;
 
@@ -111,19 +122,13 @@ function adobeconnect_add_instance($adobeconnect) {
         }
 
         require_once(dirname(dirname(dirname(__FILE__))).'/group/lib.php');
+
         // Create the meeting for each group
         foreach($crsgroups as $crsgroup) {
 
             // The teacher role if they don't already have one and
             // Assign them to each group
             if (!groups_is_member($crsgroup->id, $USER->id)) {
-
-                $param = array('shortname' => 'editingteacher');
-                $roleid = $DB->get_field('role', 'id', $param);
-
-                if (!user_has_role_assignment($USER->id, $roleid, $context->id)) {
-                    role_assign($roleid, $USER->id, $context->id, 'mod_adobeconnect');
-                }
 
                 groups_add_member($crsgroup->id, $USER->id);
 
@@ -135,8 +140,12 @@ function adobeconnect_add_instance($adobeconnect) {
                 $meeting->meeturl = adobeconnect_clean_meet_url($adobeconnect->meeturl   . '_' . $crsgroup->name);
             }
 
+            // If creating the meeting failed, then return false and revert the group role assignments
             if (!$meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid)) {
+                
+                groups_remove_member($crsgroup->id, $USER->id);
                 debugging('error creating meeting', DEBUG_DEVELOPER);
+                return false;
             }
 
             // Update permissions for meeting
@@ -176,7 +185,13 @@ function adobeconnect_add_instance($adobeconnect) {
 
     } else { // no groups support
         $meetingscoid = aconnect_create_meeting($aconnect, $meeting, $meetfldscoid);
-
+        
+        // If creating the meeting failed, then return false and revert the group role assignments
+        if (!$meetingscoid) {
+            debugging('error creating meeting', DEBUG_DEVELOPER);
+            return false;
+        }
+        
         // Update permissions for meeting
         if (empty($adobeconnect->meetingpublic)) {
             aconnect_update_meeting_perm($aconnect, $meetingscoid, ADOBE_MEETPERM_PRIVATE);
@@ -242,10 +257,12 @@ function adobeconnect_add_instance($adobeconnect) {
  * @return boolean Success/Fail
  */
 function adobeconnect_update_instance($adobeconnect) {
-    global $DB;
+    global $DB, $USER;
 
     $adobeconnect->timemodified = time();
-    $adobeconnect->id = $adobeconnect->instance;
+    $adobeconnect->id           = $adobeconnect->instance;
+    
+    $meetfldscoid = '';
 
     $aconnect = aconnect_login();
 
@@ -267,7 +284,7 @@ function adobeconnect_update_instance($adobeconnect) {
     $urlmatches = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 
     if (empty($urlmatches)) {
-        $urlmatches = array();
+            $urlmatches = array();
     } else {
         // format url for comparison
         if ((false === strpos($url, '/')) or (0 != strpos($url, '/'))) {
@@ -345,7 +362,22 @@ function adobeconnect_update_instance($adobeconnect) {
             //  $meetingobj->meeturl = $data['meeturl'] . '_' . $group->name;
             $meetingobj->starttime = date('c', $adobeconnect->starttime);
             $meetingobj->endtime = date('c', $adobeconnect->endtime);
+            
+            /* if the userid is not empty then set the meeting folder sco id to 
+               the user's connect folder.  If this line of code is not executed
+               then user's meetings that were previously in the user's connect folder
+               would be moved into the shared folder */
+            if (!empty($adobeconnect->userid)) {
+                
+                $username = get_connect_username($adobeconnect->userid);
+                $user_folder = aconnect_get_user_folder_sco_id($aconnect, $username);
+                
+                if (!empty($user_folder)) {
+                    $meetfldscoid = $user_folder;
+                }
 
+            }
+            
             // Update each meeting instance
             if (!aconnect_update_meeting($aconnect, $meetingobj, $meetfldscoid)) {
                 debugging('error updating meeting', DEBUG_DEVELOPER);

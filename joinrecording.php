@@ -16,6 +16,7 @@ require_once(dirname(__FILE__).'/connect_class_dom.php');
 
 $id         = required_param('id', PARAM_INT);
 $groupid    = required_param('groupid', PARAM_INT);
+$recscoid   = required_param('recording', PARAM_INT);
 
 global $CFG, $USER, $DB;
 
@@ -62,24 +63,35 @@ $sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
        "amg.instanceid = :instanceid AND amg.groupid = :groupid";
 
 
-$meetscoids = $DB->get_record_sql($sql, $params);
+$meetscoid = $DB->get_record_sql($sql, $params);
 
 // Get the Meeting recording details
 $aconnect   = aconnect_login();
 $recording  = array();
 $fldid      = aconnect_get_folder($aconnect, 'content');
+$usrcanjoin = false;
+$context    = get_context_instance(CONTEXT_MODULE, $cm->id);
+$data       = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
 
-$data = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoid);
+/// Set page global
+$url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
+ 
+$PAGE->set_url($url);
+$PAGE->set_context($context);
+$PAGE->set_title(format_string($adobeconnect->name));
+$PAGE->set_heading($course->fullname);
 
-if (!empty($data)) {
-    $recording = $data;
-}
+if (!empty($data) && array_key_exists($recscoid, $data)) {
 
-// If at first you don't succeed ...
-$data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+    $recording = $data[$recscoid];
+} else {
 
-if (!empty($data2)) {
-     $recording = $data2;
+    // If at first you don't succeed ...
+    $data2 = aconnect_get_recordings($aconnect, $meetscoid->meetingscoid, $meetscoid->meetingscoid);
+
+    if (!empty($data2) && array_key_exists($recscoid, $data2)) {
+        $recording = $data2[$recscoid];
+    }
 }
 
 aconnect_logout($aconnect);
@@ -87,6 +99,27 @@ aconnect_logout($aconnect);
 if (empty($recording) and confirm_sesskey()) {
     notify(get_string('errormeeting', 'adobeconnect'));
     die();
+}
+
+// If separate groups is enabled, check if the user is a part of the selected group
+if (NOGROUPS != $cm->groupmode) {
+    $usrgroups = groups_get_user_groups($cm->course, $USER
+    ->id);
+    $usrgroups = $usrgroups[0]; // Just want groups and not groupings
+
+    $group_exists = false !== array_search($groupid, $usrgroups);
+    $aag          = has_capability('moodle/site:accessallgroups', $context);
+
+    if ($group_exists || $aag) {
+        $usrcanjoin = true;
+    }
+} else {
+    $usrcanjoin = true;
+}
+
+
+if (!$usrcanjoin) {
+    notice(get_string('usergrouprequired', 'adobeconnect'), $url);
 }
 
 add_to_log($course->id, 'adobeconnect', 'view',

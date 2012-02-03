@@ -70,6 +70,19 @@ function xmldb_adobeconnect_upgrade($oldversion=0) {
         // adobeconnect savepoint reached
         upgrade_mod_savepoint(true, 2011041400, 'adobeconnect');
     }
+    
+    if ($oldversion < 2012012250) {
+        $table = new xmldb_table('adobeconnect');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', true, true, null, 0, 'introformat');
+    
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        // adobeconnect savepoint reached
+        upgrade_mod_savepoint(true, 2012012500, 'adobeconnect');
+
+    }
 
     return true;
 
