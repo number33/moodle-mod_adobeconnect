@@ -23,8 +23,10 @@ class connect_class_dom extends connect_class {
 
 
         foreach($params as $key => $data) {
-
-            $htmlentry = htmlentities($data);
+            
+            //htmlentities() breaks support for foreign characters so htmlspecialchars() used
+            //stripslashes() used because meetings with quotes were being backslashed on the AC server
+            $htmlentry = stripslashes(htmlspecialchars($data));
             $child = $dom->createElement('param', $htmlentry);
             $root->appendChild($child);
 
