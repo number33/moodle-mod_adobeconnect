@@ -101,5 +101,6 @@ $string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
 $string['longurl'] = 'That meeting URL is too long. Try shortening it';
 $string['errorrecording'] = 'Unable to find recording session';
 $string['meetinfo'] = 'More Meeting Detail';
-$string['meetinfotxt'] = 'See server meeting details'
+$string['meetinfotxt'] = 'See server meeting details';
+$string['invalidgroupmode'] = 'Your course has no groups. Please set some up or select \'No groups\''
 ?>
