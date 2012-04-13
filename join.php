@@ -62,7 +62,7 @@ if (NOGROUPS != $cm->groupmode) {
 
 /// Set page global
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
- 
+
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_title(format_string($adobeconnect->name));
@@ -88,14 +88,14 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
     if (!empty($meeting)) {
         $meeting = current($meeting);
     } else {
-        
+
         /* Check if the module instance has a user associated with it
            if so, then check the user's adobe connect folder for existince of the meeting */
         if (!empty($adobeconnect->userid)) {
             $username     = get_connect_username($adobeconnect->userid);
             $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
             $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
-            
+
             if (!empty($meeting)) {
                 $meeting = current($meeting);
             }

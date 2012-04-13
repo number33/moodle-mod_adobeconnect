@@ -50,18 +50,11 @@ if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
 // Create a Connect Pro login session for this user
 $usrobj = new stdClass();
 $usrobj = clone($USER);
-$login  = $usrobj->username;
-
-$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
-                                  '', '', '', $https);
-
-$aconnect->request_http_header_login(1, $login);
-$adobesession = $aconnect->get_cookie();
+$login  = $usrobj->username = set_username($usrobj->username, $usrobj->email);
 
 $params = array('instanceid' => $cm->instance, 'groupid' => $groupid);
 $sql = "SELECT meetingscoid FROM {adobeconnect_meeting_groups} amg WHERE ".
        "amg.instanceid = :instanceid AND amg.groupid = :groupid";
-
 
 $meetscoid = $DB->get_record_sql($sql, $params);
 
@@ -75,7 +68,7 @@ $data       = aconnect_get_recordings($aconnect, $fldid, $meetscoid->meetingscoi
 
 /// Set page global
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
- 
+
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_title(format_string($adobeconnect->name));
@@ -132,6 +125,11 @@ if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
     $port = ':' . $CFG->adobeconnect_port;
 }
 
+$aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
+                                  '', '', '', $https);
+
+$aconnect->request_http_header_login(1, $login);
+$adobesession = $aconnect->get_cookie();
 
 redirect($protocol . $CFG->adobeconnect_meethost . $port
-                     . $recording->url . '?session=' . $adobesession);
+                     . $recording->url . '?session=' . $aconnect->get_cookie());
