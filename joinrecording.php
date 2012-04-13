@@ -51,6 +51,11 @@ if (isset($CFG->adobeconnect_https) and (!empty($CFG->adobeconnect_https))) {
 // Create a Connect Pro login session for this user
 $usrobj = new stdClass();
 $usrobj = clone($USER);
+
+if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+    $usrobj->username = $usrobj->email;
+}
+
 $login  = $usrobj->username;
 
 $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_port,
