@@ -74,7 +74,11 @@ class connect_class_dom extends connect_class {
         $dom->loadXML($xml);
         $domnodelist = $dom->getElementsByTagName('cookie');
 
-        $this->_cookie = $domnodelist->item(0)->nodeValue;
+        if (isset($domnodelist->item(0)->nodeValue)) {
+            $this->_cookie = $domnodelist->item(0)->nodeValue;
+        } else {
+            $this->_cookie = null;
+        }
 
     }
 
@@ -95,6 +99,16 @@ class connect_class_dom extends connect_class {
         $dom->loadXML($this->_xmlresponse);
 
         $domnodelist = $dom->getElementsByTagName('status');
+
+        if (!is_object($domnodelist->item(0))) {
+            if (is_siteadmin($USER->id)) {
+                notice(get_string('adminemptyxml', 'adobeconnect'),
+                       $CFG->wwwroot . '/admin/settings.php?section=modsettingadobeconnect');
+            } else {
+                notice(get_string('emptyxml', 'adobeconnect'),
+                       '', $COURSE);
+            }
+        }
 
         if ($domnodelist->item(0)->hasAttributes()) {
 
@@ -123,16 +137,16 @@ class connect_class_dom extends connect_class {
     public function request_http_header_login($return_header = 0, $username = '', $stop = false) {
         global $CFG;
 
-        $hearder = array();
+        $header = array();
         $this->create_http_head_login_xml();
 
         // The first parameter is 1 because we want to include the response header
         // to extract the session cookie
         if (!empty($username)) {
-            $hearder = array("$CFG->adobeconnect_admin_httpauth: " . $username);
+            $header = array("$CFG->adobeconnect_admin_httpauth: " . $username);
         }
 
-        $this->_xmlresponse = $this->send_request($return_header, $hearder, $stop);
+        $this->_xmlresponse = $this->send_request($return_header, $header, $stop);
 
         $this->set_session_cookie($this->_xmlresponse);
 
