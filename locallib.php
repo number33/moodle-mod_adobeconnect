@@ -186,6 +186,9 @@ function adobe_connection_test($host = '', $port = 80, $username = '',
                         echo '<p>error creating user  <b>testusertest</b></p>';
                         echo '<p style="color:#680000">XML request:<br />'. htmlspecialchars($aconnectDOM->_xmlrequest). '</p>';
                         echo '<p style="color:#680000">XML response:<br />'. htmlspecialchars($aconnectDOM->_xmlresponse). '</p>';
+
+                        aconnect_logout($aconnectDOM);
+                        die();
                     }
                 } else {
 
@@ -308,7 +311,9 @@ function aconnect_get_folder_sco_id($xml, $folder) {
 
 }
 
-
+/**
+ * Log in as the admin user.  This should only be used to conduct API calls.
+ */
 function aconnect_login() {
     global $CFG, $USER, $COURSE;
 
@@ -580,7 +585,7 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
 
     // Check if meeting scoid and folder scoid are the same
     // If hey are the same then that means that forced recordings is not
-    // enabled filter-source-sco-id should not be included.  If they the
+    // enabled filter-source-sco-id should not be included.  If the
     // meeting scoid and folder scoid are not equal then forced recordings
     // are enabled and we can use filter by filter-source-sco-id
     // Thanks to A. gtdino
@@ -615,41 +620,47 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
                             if (!is_null($domnode)) {
                                 $meetingdetail = $innernodelist->item($x);
 
-                                $j = (int) $domnode->nodeValue;
-                                $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
-                                         $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
+                                // Check if the SCO item is a recording or uploaded document.  We only want to display recordings
+                                if (!is_null($meetingdetail->getElementsByTagName('duration')->item(0))) {
 
-                                $recordings[$j]->name = (string) $value;
+                                    $j = (int) $domnode->nodeValue;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
+                                             $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
-                                         $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
+                                    $recordings[$j]->name = (string) $value;
 
-                                $recordings[$j]->url = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
+                                             $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
-                                         $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
+                                    $recordings[$j]->url = (string) $value;
 
-                                $recordings[$j]->startdate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
+                                             $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
-                                         $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
+                                    $recordings[$j]->startdate = (string) $value;
 
-                                $recordings[$j]->enddate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
+                                             $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
-                                         $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
+                                    $recordings[$j]->enddate = (string) $value;
 
-                                $recordings[$j]->createdate = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
+                                             $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
-                                         $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
+                                    $recordings[$j]->createdate = (string) $value;
 
-                                $recordings[$j]->modified = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
+                                             $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
-                                         $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
+                                    $recordings[$j]->modified = (string) $value;
 
-                                $recordings[$j]->duration = (string) $value;
+                                    $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
+                                             $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
+
+                                    $recordings[$j]->duration = (string) $value;
+                                    
+                                    $recordings[$j]->sourcesco = (int) $sourcescoid;
+                                }
 
                             }
                         }
@@ -702,7 +713,7 @@ function aconnect_get_meeting_scoid($xml) {
 function aconnect_update_meeting($aconnect, $meetingobj, $meetingfdl) {
     $params = array('action' => 'sco-update',
                     'sco-id' => $meetingobj->scoid,
-                    'name' => $meetingobj->name,
+                    'name' => htmlentities($meetingobj->name),
                     'folder-id' => $meetingfdl,
 // updating meeting URL using the API corrupts the meeting for some reason
 //                    'url-path' => '/'.$meetingobj->meeturl,
@@ -820,7 +831,7 @@ function aconnect_create_meeting($aconnect, $meetingobj, $meetingfdl) {
 
     $params = array('action' => 'sco-update',
                     'type' => 'meeting',
-                    'name' => $meetingobj->name,
+                    'name' => htmlentities($meetingobj->name),
                     'folder-id' => $meetingfdl,
                     'date-begin' => $starttime,
                     'date-end' => $endtime,
@@ -895,6 +906,10 @@ function aconnect_meeting_exists($aconnect, $meetfldscoid, $filter = array()) {
 
                             $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
                                      $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
+
+                            if (!isset($matches[$key])) {
+                                $matches[$key] = new stdClass();
+                            }
 
                             $matches[$key]->name = (string) $value;
 
@@ -1027,7 +1042,7 @@ function aconnect_create_user($aconnect, $usrdata) {
         'first-name' => $usrdata->firstname,
         'last-name' => $usrdata->lastname,
         'login' => $usrdata->username,
-        'password' => md5($usrdata->username . time()),
+        'password' => strtoupper(md5($usrdata->username . time())),
         'extlogin' => $usrdata->username,
         'type' => 'user',
         'send-email' => 'false',
@@ -1330,3 +1345,133 @@ function adobeconnect_get_assignable_roles($context, $rolenamedisplay = ROLENAME
     }
     return array($rolenames, $rolecounts, $nameswithcounts);
 }
+
+/**
+ * This function accepts a username and an email and returns the user's
+ * adobe connect user name, depending on the module's configuration settings
+ * 
+ * @param string - moodle username
+ * @param string - moodle email
+ * 
+ * @return string - user's adobe connect user name
+ */
+function set_username($username, $email) {
+    global $CFG;
+    
+    if (isset($CFG->adobeconnect_email_login) and !empty($CFG->adobeconnect_email_login)) {
+        return $email;
+    } else {
+        return $username;
+    }
+}
+
+/**
+ * This function search through the user-meetings folder for a folder named
+ * after the user's login name and returns the sco-id of the user's folder
+ * 
+ * @param obj - adobe connection connection object
+ * @param string - the name of the user's folder
+ * @return mixed - sco-id of the user folder (int) or false if no folder exists
+ * 
+ */
+function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
+
+    $scoid   = false;
+    $usr_meet_scoid = aconnect_get_folder($aconnect, 'user-meetings');
+    
+    if (empty($usr_meet_scoid)) {
+        return $scoid;
+    }
+    
+    $params = array('action' => 'sco-expanded-contents',
+                    'sco-id' => $usr_meet_scoid,
+                    'filter-name' => $folder_name);
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
+    
+        $domnodelist = $dom->getElementsByTagName('sco');
+    
+        if (!empty($domnodelist->length)) {
+            if ($domnodelist->item(0)->hasAttributes()) {
+                $domnode = $domnodelist->item(0)->attributes->getNamedItem('sco-id');
+    
+                if (!is_null($domnode)) {
+                    $scoid = (int) $domnode->nodeValue;
+                }
+            }
+        }
+    }
+    
+    return $scoid;
+}
+
+/**
+ * This function returns the user's adobe connect login username based off of
+ * the adobe connect module's login configuration settings (Moodle username or
+ * Moodle email)
+ * 
+ * @param int userid
+ * @return mixed - user's login username or false if something bad happened
+ */ 
+function get_connect_username($userid) {
+    global $DB;
+    
+    $username = '';
+    $param    = array('id' => $userid);
+    $record   = $DB->get_record('user', $param, 'id,username,email');
+
+    if (!empty($userid) && !empty($record)) {
+        $username = set_username($record->username, $record->email);
+    }
+    
+    return $username;
+}
+
+/**
+ * TEST FUNCTIONS - DELETE THIS AFTER COMPLETION OF TEST
+ */
+/* 
+function texpandsco ($aconnect, $scoid) {
+    global $USER;
+    
+    $folderscoid = false;
+    $params = array('action' => 'sco-expanded-contents',
+                    'sco-id' => $scoid,
+                    'filter-name' => $USER->email);
+
+    $aconnect->create_request($params);
+
+//    if ($aconnect->call_success()) {
+//    }
+
+}
+
+function tout ($data) {
+    $filename = '/tmp/tout.xml';
+    $somecontent = $data;
+    
+    if (is_writable($filename)) {
+        if (!$handle = fopen($filename, 'w')) {
+             echo "Cannot open file ($filename)";
+             return;
+        }
+    
+        // Write $somecontent to our opened file.
+        if (fwrite($handle, $somecontent) === FALSE) {
+            echo "Cannot write to file ($filename)";
+            return;
+        }
+    
+        //echo "Success, wrote ($somecontent) to file ($filename)";
+    
+        fclose($handle);
+    
+    } else {
+        echo "The file $filename is not writable";
+    }
+} */

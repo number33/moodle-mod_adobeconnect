@@ -75,7 +75,7 @@ $string['connectiontesttitle'] = 'Connection test window';
 $string['conntestintro'] = '<p>A series of tests have been run in order to determine whether the Adobe Connect Pro server has been properly setup for this integration to work'.
 ' and to also determine whether the user credentials provided in the activity global settings has the correct permissions to perform the neccessary tasks required by the'.
 ' activity module.  If any of the tests below have failed, this activity module will not function properly.</p><p> For further assistance and documentation in how to set up your'.
-' Adobe Connect Pro server please consult the MoodleDocs help page for this activity module <a href="{a$->url}">Help page</a></p>';
+' Adobe Connect Pro server please consult the MoodleDocs help page for this activity module <a href="{$a->url}">Help page</a></p>';
 $string['greaterstarttime'] = 'The start time cannot be greater than the end time';
 $string['invalidadobemeeturl'] = 'Invalid entry for this field.  Click the help bubble for valid entries';
 
@@ -98,21 +98,20 @@ $string['nomeeting'] = 'No meeting exists on the server';
 $string['noinstances'] = 'There are no instances of adobeconnect';
 $string['error1'] = 'You must be a site administrator to access this page';
 $string['error2'] = 'The property \'{$a}\' is empty, please input a value and save the settings';
+$string['errormeeting'] = 'Error retrieving recording';
 $string['settingblurb'] = '<center><img src="{$a->image}" /></center><br />
     <p>Adobe Systems Inc. and Remote-Learner.net have partnered together to create the first publicly available
     and officially sponsored, integration method between Moodle and Adobe Acrobat Connect Pro. This new
     integration is designed to simplify the use of synchronous events within Moodle. It provides a
     single-sign-on between the two systems with easy creation and management of Adobe Connect Pro
-    meetings.</p>
-
+    meetings.</p><br />
     <p><center>About Remote-Learner</center>
     Remote-Learner has been providing educational technologies services since 1982 to its business,
     educational and governmental clients. Today, these services include support for best-of-breed
     open source programs. Remote-Learner is an official Moodle partner, JasperSoft partner and
     Alfresco partner. The company offers SaaS hosting services, IT support contracts, custom
     programming, workforce development training, instructional design and strategic consulting
-    services for organizations planning online learning programs.</p>
-
+    services for organizations planning online learning programs.</p><br />
     <p>Visit {$a->url} for information on Enterprise support</p>';
 $string['meeturl_help'] = '<p>You can customize the URL that is used to connect to the Adobe connect meeting.  The Adobe Server domain will always remain the same.
   However the last part of the URL can be customized.
@@ -163,4 +162,7 @@ $string['https'] = 'HTTPS Connection';
 $string['https_desc'] = 'Connect to the Connect server via HTTPS';
 $string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
 $string['longurl'] = 'That meeting URL is too long. Try shortening it';
-
+$string['errorrecording'] = 'Unable to find recording session';
+$string['meetinfo'] = 'More Meeting Detail';
+$string['meetinfotxt'] = 'See server meeting details';
+$string['missingexpectedgroups'] = 'There are no groups available.';

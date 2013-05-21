@@ -71,7 +71,6 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
             $param = array('class' => 'aconmeetinforow');
             $html .= html_writer::start_tag('div', $param);
 
-
             // Print meeting URL label
             $param = array('class' => 'aconlabeltitle', 'id' => 'aconmeeturltitle');
             $html .= html_writer::start_tag('div', $param);
@@ -84,6 +83,29 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
             $html .= html_writer::start_tag('div', $param);
             $param = array('for' => 'lblmeetingurl');
             $html .= html_writer::tag('label', $meetingdetail->url, $param);
+            $html .= html_writer::end_tag('div');
+
+            $html .= html_writer::end_tag('div');
+
+        }
+
+        if ($meetingdetail->servermeetinginfo) {
+            $param = array('class' => 'aconmeetinforow');
+            $html .= html_writer::start_tag('div', $param);
+
+            // Print meeting URL label
+            $param = array('class' => 'aconlabeltitle', 'id' => 'aconmeeturlinfo');
+            $html .= html_writer::start_tag('div', $param);
+            $param = array('for' => 'lblmeetingurlinfo');
+            $html .= html_writer::tag('label', get_string('meetinfo', 'adobeconnect'), $param);
+            $html .= html_writer::end_tag('div');
+
+            // Print meeting URL value
+            $param = array('class' => 'aconlabeltext', 'id' => 'aconmeeturlinfotext');
+            $html .= html_writer::start_tag('div', $param);
+            $param = array('target' => '_blank');
+//            $html .= html_writer::tag('label', $meetingdetail->url, $param);
+            $html .= html_writer::link($meetingdetail->servermeetinginfo, get_string('meetinfotxt', 'adobeconnect'), $param);
             $html .= html_writer::end_tag('div');
 
             $html .= html_writer::end_tag('div');
@@ -165,7 +187,7 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
         $param = array('class' => 'aconbtnjoin');
         $html .= html_writer::start_tag('div', $param);
 
-        $param = array('id' => $cmid, 'sesskey' => sesskey(), 'groupid' => 0);
+        $param = array('id' => $cmid, 'sesskey' => sesskey(), 'groupid' => $groupid);
         $target = new moodle_url('/mod/adobeconnect/join.php', $param);
 
         $param = array('type'=>'button',
@@ -198,8 +220,19 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
         return $html;
     }
 
-    function display_meeting_recording($recordings, $adobesession) {
-        global $CFG;
+    /** This function outpus HTML markup with links to Connect meeting recordings.
+     * If a valid groupid is passed it will only display recordings that
+     * are a part of the group
+     * 
+     * @param array - 2d array of recorded meeting and meeting details
+     * @param int - course module id
+     * @param int - group id
+     * @param int - source sco id, used to filter meetings
+     * 
+     * @return string - HTML markup, links to recorded meetings
+     */
+    function display_meeting_recording($recordings, $cmid, $groupid, $sourcescoid) {
+        global $CFG, $USER;
 
         $html       = '';
         $protocol   = 'http://';
@@ -224,16 +257,22 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
 
         foreach ($recordings as $key => $recordinggrp) {
             if (!empty($recordinggrp)) {
-                foreach($recordinggrp as $recording) {
+                foreach($recordinggrp as $recording_scoid => $recording) {
+                
+                    if ($recording->sourcesco != $sourcescoid) {
+                        continue;
+                    }
 
                     $param = array('class' => 'aconrecordingrow');
                     $html .= html_writer::start_tag('div', $param);
 
-                    $url = $protocol . $CFG->adobeconnect_meethost.$port
-                            .$recording->url.'?session='.$adobesession;
+
+                    $url = 'joinrecording.php?id=' . $cmid . '&recording='. $recording_scoid .
+                           '&groupid='. $groupid . '&sesskey=' . $USER->sesskey;
 
                     $param = array('target' => '_blank');
-                    $html .= html_writer::link($url, format_string($recording->name), $param);
+                    $name = html_entity_decode($recording->name);
+                    $html .= html_writer::link($url, format_string($name), $param);
 
                     $html .= html_writer::end_tag('div');
 
@@ -247,5 +286,10 @@ class mod_adobeconnect_renderer extends plugin_renderer_base {
 
         return $html;
         //$html .= html_writer::link($url, get_string('removemychoice','choice'));
+    }
+    
+    function display_no_groups_message() {
+        $html = html_writer::tag('p', get_string('usergrouprequired', 'adobeconnect'));
+        return $html;
     }
 }
