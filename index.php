@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @package mod
@@ -7,14 +21,13 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
-// Not sure if this page is needed anymore
-
+// Not sure if this page is needed anymore.
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 
-$id = required_param('id', PARAM_INT);   // course
+// Course.
+$id = required_param('id', PARAM_INT);
 
 global $USER, $DB;
 
@@ -28,8 +41,7 @@ $PAGE->set_pagelayout('incourse');
 add_to_log($course->id, 'adobeconnect', 'view all', "index.php?id=$course->id", '');
 
 
-/// Get all required strings
-
+// Get all required strings.
 $stradobeconnects   = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect    = get_string('modulename', 'adobeconnect');
 $strsectionname     = get_string('sectionname', 'format_'.$course->format);
@@ -48,7 +60,7 @@ if (! $adobeconnects = get_all_instances_in_course('adobeconnect', $course)) {
     die;
 }
 
-/// Print the list of instances (your module will probably extend this)
+// Print the list of instances (your module will probably extend this).
 
 $usesections = course_format_uses_sections($course->format);
 if ($usesections) {

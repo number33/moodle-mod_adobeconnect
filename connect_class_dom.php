@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @package mod
@@ -7,31 +21,21 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 require_once('connect_class.php');
 
 class connect_class_dom extends connect_class {
-
-    public function __construct($serverurl = '', $serverport = '',
-                                $username = '', $password = '',
-                                $cookie = '', $https) {
-        parent::__construct($serverurl, $serverport, $username, $password, $cookie, $https);
-
-    }
 
     public function create_request($params = array(), $sentrequest = true) {
         if (empty($params)) {
             return false;
         }
 
-
         $dom = new DOMDocument('1.0', 'UTF-8');
 
         $root = $dom->createElement('params');
         $dom->appendChild($root);
 
-
-        foreach($params as $key => $data) {
+        foreach ($params as $key => $data) {
 
             $datahtmlent = htmlentities($data);
             $child = $dom->createElement('param', $datahtmlent);
@@ -141,7 +145,7 @@ class connect_class_dom extends connect_class {
         $this->create_http_head_login_xml();
 
         // The first parameter is 1 because we want to include the response header
-        // to extract the session cookie
+        // to extract the session cookie.
         if (!empty($username)) {
             $header = array("$CFG->adobeconnect_admin_httpauth: " . $username);
         }
@@ -153,7 +157,7 @@ class connect_class_dom extends connect_class {
         return $this->_xmlresponse;
     }
 
-   private function create_http_head_login_xml() {
+    private function create_http_head_login_xml() {
         $params = array('action' => 'login',
                         'external-auth' => 'use',
                         );

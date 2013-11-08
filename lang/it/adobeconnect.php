@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /*
 * Italian Translation by Rabellino[at]di.unito.it
 * Computer Science Department of Torino
@@ -87,17 +102,17 @@ $string['adobeconnect:meetingpresenter'] = 'Relatore';
 $string['adobeconnect:meetingparticipant'] = 'Partecipante';
 $string['adobeconnect:meetinghost'] = 'Organizzatore';
 
-// Error codes
+// Error codes.
 $string['emptyxml'] = 'Impossibile connettersi al server Adobe Connect Pro.  Riprovate piu tardi e, se il problema dovesse persistere, informate l\'amministratore del sistema.';
 $string['adminemptyxml'] = 'Impossibile connettersi al server  Adobe Connect Pro.  Selezionate il link qui sotto per verificare le impostazioni del modulo e provare la connessione';
 $string['notsetupproperty'] = 'Il modulo non &egrave; correttamente configurato.  Informate l\'amministratore del sistema Moodle';
 $string['adminnotsetupproperty'] = 'Il modulo non &egrave; correttamente configurato.  Selezionate il link qui sotto per verificare le impostazioni del modulo e provare la connessione';
 
-// ADDED FOR COMPLETENESS BY RABSER
+// ADDED FOR COMPLETENESS BY RABSER.
 $string['public'] = 'Riunione Pubblica';
 $string['private'] = 'Riunione Privata';
-$string['notparticipant'] = 'L\' utente non &egrave; iscritto a partecipare a questa riunione'; // join.php 'You are not a participant for this meeting'
-$string['unableretrdetails'] = 'Impossibile reperire i dettagli per questa riunione'; // join.php 'Unable to retrieve meeting details'
-$string['usernotenrolled'] = 'Solo gli utenti iscritti al corso possono partecipare alle riunioni'; // join.php 'Only users enrolled and have a role in this course can join this meeting'
-$string['nopresenterrole'] = 'Il ruolo Adobe Presenter non &egrave definito nel sistema: segnalate all\' amministratore il problema.'; // view.php 'error: error finding adobeconnectpresenter role'
-$string['nomeeting'] = 'La riunione richiesta non esiste sul server'; // view.php 'No meeting exists on the server'
+$string['notparticipant'] = 'L\' utente non &egrave; iscritto a partecipare a questa riunione'; // The join.php 'You are not a participant for this meeting'.
+$string['unableretrdetails'] = 'Impossibile reperire i dettagli per questa riunione'; // The join.php 'Unable to retrieve meeting details'.
+$string['usernotenrolled'] = 'Solo gli utenti iscritti al corso possono partecipare alle riunioni'; // The join.php 'Only users enrolled and have a role in this course can join this meeting'.
+$string['nopresenterrole'] = 'Il ruolo Adobe Presenter non &egrave definito nel sistema: segnalate all\' amministratore il problema.'; // The view.php 'error: error finding adobeconnectpresenter role'.
+$string['nomeeting'] = 'La riunione richiesta non esiste sul server'; // The view.php 'No meeting exists on the server'.
