@@ -46,6 +46,8 @@ define('ADOBE_MEETPERM_PRIVATE', 2);
 
 define('ADOBE_TMZ_LENGTH', 6);
 
+define('ADOBE_VERSION_9', '9.0.0');
+
 function adobe_connection_test($host = '', $port = 80, $username = '',
                                $password = '', $httpheader = '',
                                $emaillogin, $https = false) {
@@ -603,58 +605,57 @@ function aconnect_get_recordings($aconnect, $folderscoid, $sourcescoid) {
             $innernodelist = $domnodelist->item(0)->getElementsByTagName('sco');
 
             if (!empty($innernodelist->length)) {
-
+                $aconnectversion = aconnect_get_version($aconnect);
                 for ($x = 0; $x < $innernodelist->length; $x++) {
 
                     if ($innernodelist->item($x)->hasAttributes()) {
 
                         $domnode = $innernodelist->item($x)->attributes->getNamedItem('sco-id');
 
-                        if (!is_null($domnode)) {
+                        if (isset($domnode)) {
                             $meetingdetail = $innernodelist->item($x);
 
                             // Check if the SCO item is a recording or uploaded document.  We only want to display recordings.
-                            if (!is_null($meetingdetail->getElementsByTagName('duration')->item(0))) {
+                            $versionbeforeversion9 = version_compare($aconnectversion, ADOBE_VERSION_9, '<');
+                            if ($versionbeforeversion9) {
+                                $durationnode = $meetingdetail->getElementsByTagName('duration')->item(0);
+                            } else {
+                                $durationnode = $innernodelist->item($x)->attributes->getNamedItem('duration');
+                            }
+                            $hasduration = (isset($durationnode) && !empty($durationnode->nodeValue));
 
-                                $j = (int) $domnode->nodeValue;
+                            if ($hasduration) {
+                                $recordingid = (int) $domnode->nodeValue;
+                                $recordings[$recordingid] = new stdClass();
+
                                 $value = (!is_null($meetingdetail->getElementsByTagName('name'))) ?
                                          $meetingdetail->getElementsByTagName('name')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->name = (string) $value;
+                                $recordings[$recordingid]->name = (string) $value;
 
                                 $value = (!is_null($meetingdetail->getElementsByTagName('url-path'))) ?
                                          $meetingdetail->getElementsByTagName('url-path')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->url = (string) $value;
+                                $recordings[$recordingid]->url = (string) $value;
 
                                 $value = (!is_null($meetingdetail->getElementsByTagName('date-begin'))) ?
                                          $meetingdetail->getElementsByTagName('date-begin')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->startdate = (string) $value;
+                                $recordings[$recordingid]->startdate = (string) $value;
 
                                 $value = (!is_null($meetingdetail->getElementsByTagName('date-end'))) ?
                                          $meetingdetail->getElementsByTagName('date-end')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->enddate = (string) $value;
+                                $recordings[$recordingid]->enddate = (string) $value;
 
                                 $value = (!is_null($meetingdetail->getElementsByTagName('date-created'))) ?
                                          $meetingdetail->getElementsByTagName('date-created')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->createdate = (string) $value;
+                                $recordings[$recordingid]->createdate = (string) $value;
 
                                 $value = (!is_null($meetingdetail->getElementsByTagName('date-modified'))) ?
                                          $meetingdetail->getElementsByTagName('date-modified')->item(0)->nodeValue : '';
+                                $recordings[$recordingid]->modified = (string) $value;
 
-                                $recordings[$j]->modified = (string) $value;
+                                $recordings[$recordingid]->duration = (string) $durationnode->nodeValue;
 
-                                $value = (!is_null($meetingdetail->getElementsByTagName('duration'))) ?
-                                         $meetingdetail->getElementsByTagName('duration')->item(0)->nodeValue : '';
-
-                                $recordings[$j]->duration = (string) $value;
-
-                                $recordings[$j]->sourcesco = (int) $sourcescoid;
+                                $recordings[$recordingid]->sourcesco = (int) $sourcescoid;
                             }
-
                         }
                     }
                 }
@@ -1379,6 +1380,33 @@ function aconnect_get_user_folder_sco_id($aconnect, $folder_name) {
     }
 
     return $scoid;
+}
+
+/**
+ * This function returns the current version of Adobe Connect Server.
+ * 
+ * @param obj Adobe Connect connection object
+ * @return string The Adobe Connect version
+ * 
+ */
+function aconnect_get_version($aconnect) {
+    $version = '';
+    $params = array('action' => 'common-info');
+
+    $aconnect->create_request($params);
+
+    if ($aconnect->call_success()) {
+        $dom = new DomDocument();
+        $dom->loadXML($aconnect->_xmlresponse);
+
+        $domnodelist = $dom->getElementsByTagName('version');
+
+        if (!empty($domnodelist->length)) {
+            $version = (string) $domnodelist->item(0)->nodeValue;
+        }
+    }
+
+    return $version;
 }
 
 /**

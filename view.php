@@ -406,7 +406,8 @@ $showrecordings = false;
 if (!$adobeconnect->meetingpublic) {
 
     // Check capabilities.
-    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
+    if (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id) or
+        has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
         has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
         $showrecordings = true;
     }
