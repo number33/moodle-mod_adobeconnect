@@ -349,7 +349,7 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
 
 
     $url = $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
-           $usrprincipal.'&amp;sco-id='.$scoid.'&amp;session='.$adobesession;
+           $usrprincipal.'&sco-id='.$scoid.'&session='.$adobesession;
 
     // Get the server meeting details link.
     $meetingdetail->servermeetinginfo = $url;
