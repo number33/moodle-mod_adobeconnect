@@ -36,9 +36,7 @@ class connect_class_dom extends connect_class {
         $dom->appendChild($root);
 
         foreach ($params as $key => $data) {
-
-            $datahtmlent = htmlentities($data);
-            $child = $dom->createElement('param', $datahtmlent);
+            $child = $dom->createElement('param', htmlspecialchars($data));
             $root->appendChild($child);
 
             $attribute = $dom->createAttribute('name');

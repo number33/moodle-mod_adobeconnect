@@ -706,7 +706,7 @@ function aconnect_get_meeting_scoid($xml) {
 function aconnect_update_meeting($aconnect, $meetingobj, $meetingfdl) {
     $params = array('action' => 'sco-update',
                     'sco-id' => $meetingobj->scoid,
-                    'name' => htmlentities($meetingobj->name),
+                    'name' => $meetingobj->name,
                     'folder-id' => $meetingfdl,
                     'date-begin' => $meetingobj->starttime,
                     'date-end' => $meetingobj->endtime,
@@ -820,7 +820,7 @@ function aconnect_create_meeting($aconnect, $meetingobj, $meetingfdl) {
     $params = array(
         'action' => 'sco-update',
         'type' => 'meeting',
-        'name' => htmlentities($meetingobj->name),
+        'name' => $meetingobj->name,
         'folder-id' => $meetingfdl,
         'date-begin' => $starttime,
         'date-end' => $endtime
