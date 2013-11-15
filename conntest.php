@@ -43,26 +43,13 @@ if (false === array_search($USER->id, $admins)) {
 
 $ac = new stdClass();
 
-$param = array('name' => 'adobeconnect_admin_login');
-$ac->login      = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_host');
-$ac->host       = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_port');
-$ac->port       = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_admin_password');
-$ac->pass       = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_admin_httpauth');
-$ac->httpauth   = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_email_login');
-$ac->emaillogin = $DB->get_field('config', 'value', $param);
-
-$param = array('name' => 'adobeconnect_https');
-$ac->https = $DB->get_field('config', 'value', $param);
+$ac->login      = $CFG->adobeconnect_admin_login;
+$ac->host       = $CFG->adobeconnect_host;
+$ac->port       = $CFG->adobeconnect_port;
+$ac->pass       = $CFG->adobeconnect_admin_password;
+$ac->httpauth   = $CFG->adobeconnect_admin_httpauth;
+$ac->emaillogin = $CFG->adobeconnect_email_login;
+$ac->https      = $CFG->adobeconnect_https;
 
 foreach ($ac as $propertyname => $propertyvalue) {
 
