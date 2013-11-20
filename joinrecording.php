@@ -98,8 +98,6 @@ if (!empty($data) && array_key_exists($recscoid, $data)) {
     }
 }
 
-aconnect_logout($aconnect);
-
 if (empty($recording) and confirm_sesskey()) {
     notify(get_string('errormeeting', 'adobeconnect'));
     die();
@@ -110,20 +108,68 @@ if (NOGROUPS != $cm->groupmode) {
     $usrgroups = groups_get_user_groups($cm->course, $USER->id);
     $usrgroups = $usrgroups[0]; // Just want groups and not groupings.
 
-    $group_exists = false !== array_search($groupid, $usrgroups);
+    $groupexists = false !== array_search($groupid, $usrgroups);
     $aag          = has_capability('moodle/site:accessallgroups', $context);
 
-    if ($group_exists || $aag) {
+    if ($groupexists || $aag) {
         $usrcanjoin = true;
     }
 } else {
     $usrcanjoin = true;
 }
 
-
 if (!$usrcanjoin) {
     notice(get_string('usergrouprequired', 'adobeconnect'), $url);
+} else {
+    // Create user in Adobe Connect.
+    $validuser = true;
+    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
+        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
+            // DEBUG.
+            debugging("error creating user");
+            $validuser = false;
+        }
+    }
+
+    // Assign AdobeConnect role based on Moodle user's capabilities.
+    // Participant capability is granted to any Moodle user for public meetings.
+    if (!empty($meetscoid->meetingscoid) and !empty($usrprincipal) and $validuser == true ) {
+        if (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id, false)) {
+            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_HOST, true)) {
+                // DEBUG.
+                debugging('error assign user adobe host role');
+            }
+        } else if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id, false)) {
+            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PRESENTER, true)) {
+                // DEBUG.
+                debugging('error assign user adobe presenter role');
+            }
+        } else if (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id, false)) {
+            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PARTICIPANT, true)) {
+                // DEBUG.
+                debugging('error assign user adobe particpant role');
+            }
+        } else {
+            // Check if meeting is public and allow them to view recording, assigning permissions in AC and Moodle.
+            if ($adobeconnect->meetingpublic) {
+                $participantrole = $DB->get_record('role', array('shortname'=>'adobeconnectparticipant'));
+                role_assign($participantrole->id, $USER->id, $context->id);
+                add_to_log($course->id, 'role', 'assign',
+                        'mod/adobeconnect/participant.php?contextid='.$context->id.'&roleid='.$participantrole->id,
+                        $participantrole->name ($participantrole->shortname), '', $USER->id);
+                if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PARTICIPANT, true)) {
+                    // DEBUG.
+                    debugging('error assign user adobe particpant role');
+                }
+            }
+        }
+    } else {
+        notice(get_string('unableretrdetails', 'adobeconnect'), $url);
+    }
+
 }
+
+aconnect_logout($aconnect);
 
 add_to_log($course->id, 'adobeconnect', 'view',
            "view.php?id=$cm->id", "View recording {$adobeconnect->name} details", $cm->id);
