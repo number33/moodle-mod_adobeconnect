@@ -193,13 +193,7 @@ if (!empty($meetscoids)) {
     unset($names);
 
     // Check if the user exists and if not create the new user.
-    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
-        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
-            // DEBUG.
-            debugging("error creating user", DEBUG_DEVELOPER);
-            $validuser = false;
-        }
-    }
+    $userprincipalid = aconnect_create_user($aconnect, $usrobj);
 
     // Check the user's capability and assign them view permissions to the recordings folder
     // if it's a public meeting give them permissions regardless.
@@ -208,13 +202,13 @@ if (!empty($meetscoids)) {
 
         if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
             has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
-            if (!aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE)) {
+            if (!aconnect_assign_user_perm($aconnect, $userprincipalid, $fldid, ADOBE_VIEW_ROLE)) {
                 // DEBUG.
                 debugging("error assign user recording folder permissions", DEBUG_DEVELOPER);
             }
         }
     } else {
-        aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE);
+        aconnect_assign_user_perm($aconnect, $userprincipalid, $fldid, ADOBE_VIEW_ROLE);
     }
 
     aconnect_logout($aconnect);
@@ -349,7 +343,7 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
 
 
     $url = $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
-           $usrprincipal.'&sco-id='.$scoid.'&session='.$adobesession;
+           $userprincipalid.'&sco-id='.$scoid.'&session='.$adobesession;
 
     // Get the server meeting details link.
     $meetingdetail->servermeetinginfo = $url;

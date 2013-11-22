@@ -32,7 +32,7 @@ $id         = required_param('id', PARAM_INT);
 $groupid    = required_param('groupid', PARAM_INT);
 $recscoid   = required_param('recording', PARAM_INT);
 
-global $CFG, $USER, $DB;
+global $CFG, $USER, $DB, $PAGE;
 
 // Do the usual Moodle setup.
 if (! $cm = get_coursemodule_from_id('adobeconnect', $id)) {
@@ -121,52 +121,15 @@ if (NOGROUPS != $cm->groupmode) {
 if (!$usrcanjoin) {
     notice(get_string('usergrouprequired', 'adobeconnect'), $url);
 } else {
-    // Create user in Adobe Connect.
-    $validuser = true;
-    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
-        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
-            // DEBUG.
-            debugging("error creating user");
-            $validuser = false;
-        }
-    }
-
-    // Assign AdobeConnect role based on Moodle user's capabilities.
-    // Participant capability is granted to any Moodle user for public meetings.
-    if (!empty($meetscoid->meetingscoid) and !empty($usrprincipal) and $validuser == true ) {
-        if (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id, false)) {
-            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_HOST, true)) {
-                // DEBUG.
-                debugging('error assign user adobe host role');
-            }
-        } else if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id, false)) {
-            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PRESENTER, true)) {
-                // DEBUG.
-                debugging('error assign user adobe presenter role');
-            }
-        } else if (has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id, false)) {
-            if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PARTICIPANT, true)) {
-                // DEBUG.
-                debugging('error assign user adobe particpant role');
-            }
-        } else {
-            // Check if meeting is public and allow them to view recording, assigning permissions in AC and Moodle.
-            if ($adobeconnect->meetingpublic) {
-                $participantrole = $DB->get_record('role', array('shortname'=>'adobeconnectparticipant'));
-                role_assign($participantrole->id, $USER->id, $context->id);
-                add_to_log($course->id, 'role', 'assign',
-                        'mod/adobeconnect/participant.php?contextid='.$context->id.'&roleid='.$participantrole->id,
-                        $participantrole->name ($participantrole->shortname), '', $USER->id);
-                if (!aconnect_check_user_perm($aconnect, $usrprincipal, $meetscoid->meetingscoid, ADOBE_PARTICIPANT, true)) {
-                    // DEBUG.
-                    debugging('error assign user adobe particpant role');
-                }
-            }
-        }
-    } else {
+    if (empty($meetscoid->meetingscoid)) {
         notice(get_string('unableretrdetails', 'adobeconnect'), $url);
+    } else {
+        // Create user in Adobe Connect with his permission (role) to the meeting.
+        if ($userprincipalid = aconnect_create_user($aconnect, $usrobj)) {
+            $userrole = aconnect_assign_user_from_moodle_role($aconnect, $userprincipalid, $usrobj->id, $context,
+                    $meetscoid->meetingscoid, $adobeconnect->meetingpublic);
+        }
     }
-
 }
 
 aconnect_logout($aconnect);

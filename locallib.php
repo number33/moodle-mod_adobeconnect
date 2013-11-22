@@ -954,7 +954,7 @@ function aconnect_get_user_principal_id($xml) {
             if ($domnodelist->item(0)->hasAttributes()) {
                 $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
 
-                if (!is_null($domnode)) {
+                if (!is_null($domnode) && !empty($domnode->nodeValue)) {
                     $usrprincipalid = (int) $domnode->nodeValue;
                 }
             }
@@ -1016,44 +1016,82 @@ function aconnect_delete_user($aconnect, $principalid = 0) {
  * @param object $aconnet a connect_class object
  * @param object $usrdata an object with firstname,lastname,
  * username and email properties.
- * @return mixed principal-id of the new user or false
+ * @return mixed principal-id of the new user or existing user or false
  */
 function aconnect_create_user($aconnect, $usrdata) {
-    $principal_id = false;
+    $principalid = false;
 
-    $params = array(
-        'action' => 'principal-update',
-        'first-name' => $usrdata->firstname,
-        'last-name' => $usrdata->lastname,
-        'login' => $usrdata->username,
-        'password' => strtoupper(md5($usrdata->username . time())),
-        'extlogin' => $usrdata->username,
-        'type' => 'user',
-        'send-email' => 'false',
-        'has-children' => 0,
-        'email' => $usrdata->email,
-    );
+    if (!$principalid = aconnect_user_exists($aconnect, $usrdata)) {
+        $params = array(
+            'action' => 'principal-update',
+            'first-name' => $usrdata->firstname,
+            'last-name' => $usrdata->lastname,
+            'login' => $usrdata->username,
+            'password' => strtoupper(md5($usrdata->username . time())),
+            'extlogin' => $usrdata->username,
+            'type' => 'user',
+            'send-email' => 'false',
+            'has-children' => 0,
+            'email' => $usrdata->email,
+        );
 
-    $aconnect->create_request($params);
+        $aconnect->create_request($params);
 
-    if ($aconnect->call_success()) {
-        $dom = new DomDocument();
-        $dom->loadXML($aconnect->_xmlresponse);
+        if ($aconnect->call_success()) {
+            $dom = new DomDocument();
+            $dom->loadXML($aconnect->_xmlresponse);
 
-        $domnodelist = $dom->getElementsByTagName('principal');
+            $domnodelist = $dom->getElementsByTagName('principal');
 
-        if (!empty($domnodelist->length)) {
-            if ($domnodelist->item(0)->hasAttributes()) {
-                $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
+            if (!empty($domnodelist->length)) {
+                if ($domnodelist->item(0)->hasAttributes()) {
+                    $domnode = $domnodelist->item(0)->attributes->getNamedItem('principal-id');
 
-                if (!is_null($domnode)) {
-                    $principal_id = (int) $domnode->nodeValue;
+                    if (!is_null($domnode) && !empty($domnode->nodeValue)) {
+                        $principalid = (int) $domnode->nodeValue;
+                    }
                 }
             }
+        } else {
+            debugging("Error creating user");
         }
     }
 
-    return $principal_id;
+    return $principalid;
+}
+
+/**
+ * Assign user role in Adobe Connnect based on the permission in Moodle.
+ *
+ * @param object $aconnect a connect_class object
+ * @param int $userprincipalid Adobe Connect principal-id of the user
+ * @param int $userid a moodle user id
+ * @param int $contextid the context id of the activity
+ * @param int $meetingscoid an Adobe Connect meeting sco-id
+ * @param bool $ispublicmeeting is the meeting public or not
+ * @return bool $userrole if the user has a role or not
+ */
+function aconnect_assign_user_from_moodle_role($aconnect, $userprincipalid, $userid, $contextid,
+                                               $meetingscoid, $ispublicmeeting) {
+    $userrole = false;
+
+    // Check the user's capabilities and assign them the Adobe Role.
+    if (has_capability('mod/adobeconnect:meetinghost', $contextid, $userid, false)) {
+        $userrole = ADOBE_HOST;
+    } else if (has_capability('mod/adobeconnect:meetingpresenter', $contextid, $userid, false)) {
+        $userrole = ADOBE_PRESENTER;
+    } else if (has_capability('mod/adobeconnect:meetingparticipant', $contextid, $userid, false)
+               || $ispublicmeeting) {
+        $userrole = ADOBE_PARTICIPANT;
+    }
+
+    if ($userrole) {
+        if (!aconnect_check_user_perm($aconnect, $userprincipalid, $meetingscoid, $userrole, true)) {
+            debugging('error assign user adobe role: ' . $userrole);
+        }
+    }
+
+    return $userrole;
 }
 
 function aconnect_assign_user_perm($aconnect, $usrprincipal, $meetingscoid, $type) {
