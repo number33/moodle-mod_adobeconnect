@@ -20,11 +20,11 @@ $string['admin_login'] = 'Admin Login';
 $string['admin_login_desc'] = 'Login for main admin account';
 $string['admin_password'] = 'Admin Password';
 $string['admin_password_desc'] = 'Password for main admin account';
-$string['adminemptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Click continue to proceed to the activity settings page and test the connection';
-$string['adminnotsetupproperty'] = 'The activity module is not properly setup.  Click continue to proceed to the activity settings page and test the connection';
+$string['adminemptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time. Click continue to proceed to the activity settings page and test the connection';
+$string['adminnotsetupproperty'] = 'The activity module is not properly setup. Click continue to proceed to the activity settings page and test the connection';
 $string['adobeconnect'] = 'Adobe Connect';
 $string['adobeconnect:meetinghost'] = 'Meeting Host';
-$string['adobeconnect:meetingparticipant'] = 'Meeting Particpant';
+$string['adobeconnect:meetingparticipant'] = 'Meeting Participant';
 $string['adobeconnect:meetingpresenter'] = 'Meeting Presenter';
 $string['adobeconnectfieldset'] = 'Adobe Connect Settings';
 $string['adobeconnecthost'] = 'Adobe Connect Host';
@@ -41,7 +41,7 @@ $string['duplicatemeetingname'] = 'A duplicate meeting name was found on the ser
 $string['duplicateurl'] = 'A duplicate meeting URL was found on the server';
 $string['email_login'] = 'Email address login';
 $string['email_login_desc'] = 'Check this option only if your Connect Pro server login is set to use email address. Note that toggling this option on/off during regular usage of this activity module can potentially create duplicaed users on the Connect Pro server';
-$string['emptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time.  Please inform your Moodle administrator.';
+$string['emptyxml'] = 'Unable to connect to the Adobe Connect Pro server at this time. Please inform your Moodle administrator.';
 $string['endtime'] = 'End time';
 $string['error1'] = 'You must be a site administrator to access this page';
 $string['error2'] = 'The property \'{$a}\' is empty, please input a value and save the settings';
@@ -51,7 +51,7 @@ $string['host'] = 'Host';
 $string['host_desc'] = 'Where REST calls get sent to';
 $string['https'] = 'HTTPS Connection';
 $string['https_desc'] = 'Connect to the Connect server via HTTPS';
-$string['invalidadobemeeturl'] = 'Invalid entry for this field.  Click the help bubble for valid entries';
+$string['invalidadobemeeturl'] = 'Invalid entry for this field. Click the help bubble for valid entries';
 $string['invalidurl'] = 'The URL needs to start with a letter (a-z)';
 $string['joinmeeting'] = 'Join Meeting';
 $string['longurl'] = 'That meeting URL is too long. Try shortening it';
@@ -66,7 +66,7 @@ $string['meetingstart'] = 'Meeting start time';
 $string['meetingtype'] = 'Meeting type';
 $string['meetingtype_help'] = '<p>A public meeting type is one where anyone who has the URL for the meeting can enter the room.</p>
 <p>A private meeting type is one where only registered users and participants can enter. The login page does not allow
-guests to log in.  With private meetings the meeting does not actually start until the meeting Presenter or Host joins the meeting.</p>
+guests to log in. With private meetings the meeting does not actually start until the meeting Presenter or Host joins the meeting.</p>
 
 <p>
 If you are creating a private meeting it is always good practice to assign at
@@ -82,11 +82,10 @@ to be present in the meeting, should have either the host or presenter role.
 $string['meettemplates'] = 'Meeting Templates';
 $string['meettemplates_help'] = '<p>A meeting room template creates meeting with a custom layout for the meeting room.</p>';
 $string['meeturl'] = 'Meeting URL';
-$string['meeturl_help'] = '<p>You can customize the URL that is used to connect to the Adobe connect meeting.  The Adobe Server domain will always remain the same.
-  However the last part of the URL can be customized.
+$string['meeturl_help'] = '<p>You can customize the URL that is used to connect to the Adobe connect meeting. The Adobe Server domain will always remain the same. However the last part of the URL can be customized.
 </p>
 <p>For example if the Adobe Connect server domain was located at <b>http://adobe.connect.server/</b>
-  when customizing the URL to <b>mymeeting</b>, the URL to connect to the meeting would be <b>http://adobe.connect.server/mymeeting</b>.  Leave out the trailing forward slash
+ when customizing the URL to <b>mymeeting</b>, the URL to connect to the meeting would be <b>http://adobe.connect.server/mymeeting</b>. Leave out the trailing forward slash
 </p>
 <p>Valid URL entries consists of the name with
 <ul>
@@ -114,7 +113,7 @@ $string['noinstances'] = 'There are no instances of adobeconnect';
 $string['nomeeting'] = 'No meeting exists on the server';
 $string['nopresenterrole'] = 'error: error finding adobeconnectpresenter role';
 $string['notparticipant'] = 'You are not a participant for this meeting';
-$string['notsetupproperty'] = 'The activity module is not properly setup.  Please contact your Moodle administrator';
+$string['notsetupproperty'] = 'The activity module is not properly setup. Please contact your Moodle administrator';
 $string['pluginadministration'] = 'Adobe Connect Administration';
 $string['pluginname'] = 'Adobe Connect';
 $string['port'] = 'Port';
@@ -139,6 +138,6 @@ programming, workforce development training, instructional design and strategic 
 services for organizations planning online learning programs.</p><br />
 <p>Visit {$a->url} for information on Enterprise support</p>';
 $string['starttime'] = 'Start time';
+$string['testconnection'] = 'Test Connection';
 $string['unableretrdetails'] = 'Unable to retrieve meeting details';
 $string['usergrouprequired'] = 'This Meeting requires users to be in a group in order to join';
-$string['testconnection'] = 'Test Connection';

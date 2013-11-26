@@ -24,7 +24,7 @@ $string['adminemptyxml'] = 'Impossible de se connecter au serveur Adobe Connect 
 $string['adminnotsetupproperty'] = 'Le module d\'activité n\'est pas configuré correctement. Cliquer sur continuer et aller dans la page d\'administration de l\'activité pour tester la connexion';
 $string['adobeconnect'] = 'Adobe Connect';
 $string['adobeconnect:meetinghost'] = 'Hôte de réunion';
-$string['adobeconnect:meetingparticipant'] = 'Particpant de réunion';
+$string['adobeconnect:meetingparticipant'] = 'Participant de réunion';
 $string['adobeconnect:meetingpresenter'] = 'Présentateur de réunion';
 $string['adobeconnectfieldset'] = 'Réglages Adobe Connect';
 $string['adobeconnecthost'] = 'Hôte Adobe Connect';
@@ -36,7 +36,7 @@ $string['adobeconnectparticipantdescription'] = 'Le participant peut voir une r�
 $string['adobeconnectpresenter'] = 'Présentateur Adobe Connect';
 $string['adobeconnectpresenterdescription'] = 'Le présentateur d\'une réunion peut présenter du contenu, partager un écran, envoyer des messages textes, modérer les questions, créer des notes, diffuser du contenu audio et vidéo et pousser du contenu provenant d\'un site Web';
 $string['connectiontesttitle'] = 'Fenêtre de test de connexion';
-$string['conntestintro'] = '<p>Une série de tests a été exécutée afin de déterminer si le serveur Adobe Connect a été convenablement configuré pour que cette intégration fonctionne et aussi pour déterminer si les informations de l\'utilisateur fournit dans les paramètres a les permissions nécessaires pour effectués les taĉhes requisent par le module d\'activité. S\'il y a échec dans les tests ci-dessous, le module d\'activité ne fonctionnera pas correctement.</p><p>Pour obtenir de l\'aide et de la documentation sur comment configurer le serveur Adobe Connect, s\'il vous plait consulter la page d\'aide de la documentation Moodle pour le module d\'activité <a href="{$a->url}">Page d\'aide</a></p>';
+$string['conntestintro'] = '<p>Une série de tests a été exécutée afin de déterminer si le serveur Adobe Connect a été convenablement configuré pour que cette intégration fonctionne et aussi pour déterminer si les informations d\'identification de l\'utilisateur fournies dans les paramètres ont les permissions nécessaires pour effectuer les tâches requises par le module d\'activité. Si l\'un des tests ci-dessous a échoué, le module d\'activité ne fonctionnera pas correctement.</p><p>Pour obtenir de l\'aide et de la documentation sur comment configurer le serveur Adobe Connect, s\'il vous plait consulter la page d\'aide de la documentation Moodle pour le module d\'activité <a href="{$a->url}">Page d\'aide</a></p>';
 $string['duplicatemeetingname'] = 'Une réunion ayant le même nom existe sur le serveur';
 $string['duplicateurl'] = 'Une réunion ayant le même URL existe sur le serveur';
 $string['email_login'] = 'Nom d\'utilisateur avec adresse de courriel';
@@ -56,8 +56,8 @@ $string['invalidurl'] = 'L\'URL doit commencer par une letter (a-z)';
 $string['joinmeeting'] = 'Joindre la réunion';
 $string['longurl'] = 'L\'URL de la réunion est trop long';
 $string['meethost_desc'] = 'Nom de domaine du serveur Adobe Connect';
-$string['meetinfo'] = 'Gestion de la réunion dans Adobe Connect';
-$string['meetinfotxt'] = 'Accéder à la gestion de la réunion dans Adobe Connect';
+$string['meetinfo'] = 'Détails supplémentaires de la réunion';
+$string['meetinfotxt'] = 'Voir les détails de la réunion';
 $string['meetinghost'] = 'Nom de domaine';
 $string['meetingend'] = 'Fin de la réunion';
 $string['meetingintro'] = 'Description de la réunion';
@@ -79,10 +79,10 @@ $string['meettemplates'] = 'Modèle de réunion';
 $string['meettemplates_help'] = '<p>Un modèle de réunion crée une réunion avec une mise en page personnalisée dans la salle.</p>';
 $string['meeturl'] = 'URL de la réunion';
 $string['meeturl_help'] = '<p>Vous pouvez personnaliser l\'URL qui est utilisé pour se connecter à une réunion Adobe Connect. Le nom de domaine du serveur sera toujours le même,
-mais la dernière partie peut être personnalisé.
+mais la dernière partie peut être personnalisée.
 </p>
 <p>Par exemple, si un serveur Adobe Connect est situé à l\'adresse <b>http://adobe.connect.serveur/</b>,
-  Lorsque vous inscrivez l\'URL <b>mareunion</b>, le lien pour se connecter à votre réunion est <b>http://adobe.connect.serveur/mareunion</b>.
+ Lorsque vous inscrivez l\'URL <b>mareunion</b>, le lien pour se connecter à votre réunion est <b>http://adobe.connect.serveur/mareunion</b>.
 </p>
 <p>Exemple d\'entrées valides :
 <ul>
@@ -121,6 +121,6 @@ $string['recordinghdr'] = 'Enregistrements';
 $string['samemeettime'] = 'Heure de la réunion invalide';
 $string['selectparticipants'] = 'Assigner des rôles';
 $string['starttime'] = 'Heure de début';
+$string['testconnection'] = 'Tester la connexion';
 $string['unableretrdetails'] = 'Impossible de récupérer les détails de la réunion';
 $string['usergrouprequired'] = 'Cette réunion requière aux utilisateurs de faire partie d\'un groupe pour y accéder';
-$string['testconnection'] = 'Tester la connexion';
