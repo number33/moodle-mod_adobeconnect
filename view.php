@@ -280,7 +280,7 @@ $aconnect = aconnect_login();
 $cond = array('instanceid' => $adobeconnect->id, 'groupid' => $groupid);
 $scoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid', $cond);
 
-$meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+$meetfldscoid = aconnect_get_folder($aconnect, 'meetings', $CFG->adobeconnect_admin_subfolder);
 
 
 $filter = array('filter-sco-id' => $scoid);

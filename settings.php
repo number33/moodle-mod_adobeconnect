@@ -53,6 +53,9 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configcheckbox('adobeconnect_https', get_string('https', 'adobeconnect'),
             get_string('https_desc', 'adobeconnect'), '0'));
+    
+    $settings->add(new admin_setting_configtext('adobeconnect_admin_subfolder', get_string('admin_subfolder', 'adobeconnect'),
+            get_string('admin_subfolder_desc', 'adobeconnect'), '', PARAM_TEXT));
 
     $url = $CFG->wwwroot . '/mod/adobeconnect/conntest.php';
     $url = htmlentities($url);

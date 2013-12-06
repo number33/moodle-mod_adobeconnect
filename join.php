@@ -93,7 +93,7 @@ if ($usrcanjoin and confirm_sesskey($sesskey)) {
     $aconnect = aconnect_login();
 
     // Check if the meeting still exists in the shared folder of the Adobe server.
-    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings', $CFG->adobeconnect_admin_subfolder);
     $filter       = array('filter-sco-id' => $meetingscoid);
     $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
 

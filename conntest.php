@@ -50,15 +50,17 @@ $ac->pass       = $CFG->adobeconnect_admin_password;
 $ac->httpauth   = $CFG->adobeconnect_admin_httpauth;
 $ac->emaillogin = $CFG->adobeconnect_email_login;
 $ac->https      = $CFG->adobeconnect_https;
+$ac->subfolder  = $CFG->adobeconnect_admin_subfolder;
 
 foreach ($ac as $propertyname => $propertyvalue) {
 
     // Check if the property is equal to email login or https check boxes
     // These are the only values allowed to be empty.
-    $isnotemaillogin   = strcmp($propertyname, 'emaillogin');
-    $isnothttps        = strcmp($propertyname, 'https');
+    $isnotemaillogin   = ($propertyname != 'emaillogin');
+    $isnothttps        = ($propertyname != 'https');
+    $isnotsubfolder    = ($propertyname != 'subfolder');
 
-    $checkifempty = $isnotemaillogin && $isnothttps;
+    $checkifempty = $isnotemaillogin && $isnothttps && $isnotsubfolder;
 
     // If this property is empty.
     if ($checkifempty and empty($propertyvalue)) {
@@ -81,15 +83,8 @@ $param = new stdClass();
 $param->url = 'http://docs.moodle.org/en/Remote_learner_adobe_connect_pro';
 print_string('conntestintro', 'adobeconnect', $param);
 
-if (!empty($ac->https)) {
-    $https = true;
-} else {
-    $https = false;
-}
-
-adobe_connection_test($ac->host, $ac->port, $ac->login,
-                      $ac->pass, $ac->httpauth,
-                      $ac->emaillogin, $ac->https);
+adobe_connection_test($ac->host, $ac->port, $ac->login, $ac->pass, $ac->httpauth,
+                      $ac->emaillogin, $ac->https, $ac->subfolder);
 
 echo '<center>'. "\n";
 echo '<input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" />';

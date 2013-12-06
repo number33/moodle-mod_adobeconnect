@@ -88,7 +88,7 @@ function adobeconnect_supports($feature) {
  * @return int The id of the newly inserted adobeconnect record
  */
 function adobeconnect_add_instance($adobeconnect) {
-    global $COURSE, $USER, $DB;
+    global $COURSE, $USER, $DB, $CFG;
 
     $adobeconnect->timecreated  = time();
     $adobeconnect->meeturl      = adobeconnect_clean_meet_url($adobeconnect->meeturl);
@@ -126,7 +126,7 @@ function adobeconnect_add_instance($adobeconnect) {
     // meeting folder location.
     $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
     if (empty($meetfldscoid)) {
-        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+        $meetfldscoid = aconnect_get_folder($aconnect, 'meetings', $CFG->adobeconnect_admin_subfolder);
     }
 
     $meeting = clone $adobeconnect;
@@ -276,7 +276,7 @@ function adobeconnect_add_instance($adobeconnect) {
  * @return boolean Success/Fail
  */
 function adobeconnect_update_instance($adobeconnect) {
-    global $DB, $USER;
+    global $DB, $USER, $CFG;
 
     $adobeconnect->timemodified = time();
     $adobeconnect->id           = $adobeconnect->instance;
@@ -285,7 +285,7 @@ function adobeconnect_update_instance($adobeconnect) {
 
     $aconnect = aconnect_login();
 
-    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+    $meetfldscoid = aconnect_get_folder($aconnect, 'meetings', $CFG->adobeconnect_admin_subfolder);
 
     // Look for meetings whose names are similar.
     $filter = array('filter-like-name' => $adobeconnect->name);

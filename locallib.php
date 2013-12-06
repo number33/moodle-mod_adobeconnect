@@ -48,9 +48,8 @@ define('ADOBE_TMZ_LENGTH', 6);
 
 define('ADOBE_VERSION_9', '9.0.0');
 
-function adobe_connection_test($host = '', $port = 80, $username = '',
-                               $password = '', $httpheader = '',
-                               $emaillogin, $https = false) {
+function adobe_connection_test($host, $port, $username, $password, $httpheader,
+                               $emaillogin, $https, $subfolder) {
 
     if (empty($host) or
         empty($port) or (0 == $port) or
@@ -153,7 +152,7 @@ function adobe_connection_test($host = '', $port = 80, $username = '',
 
                 }
 
-                $folderscoid = aconnect_get_folder($aconnectdom, 'meetings');
+                $folderscoid = aconnect_get_folder($aconnectdom, 'meetings', $subfolder);
 
                 if ($folderscoid) {
                     echo '<p style="color:#006633">successfully obtained meetings folder scoid: '. $folderscoid . '</p>';
@@ -166,7 +165,7 @@ function adobe_connection_test($host = '', $port = 80, $username = '',
                 }
 
                 // Test creating a meeting.
-                $folderscoid = aconnect_get_folder($aconnectdom, 'meetings');
+                $folderscoid = aconnect_get_folder($aconnectdom, 'meetings', $subfolder);
 
                 $meeting = new stdClass();
                 $meeting->name = 'testmeetingtest';
@@ -283,10 +282,11 @@ function adobe_connection_test($host = '', $port = 80, $username = '',
  * @param string $folder name of the folder to get
  * (ex. forced-archives = recording folder | meetings = meetings folder
  * | content = shared content folder)
+ * @param string $subfolder name of the subfolder to get
  * @return mixed adobe connect folder sco-id || false if there was an error
  *
  */
-function aconnect_get_folder($aconnect, $folder = '') {
+function aconnect_get_folder($aconnect, $folder = '', $subfolder = '') {
     $folderscoid = false;
     $params = array('action' => 'sco-shortcuts');
 
@@ -296,11 +296,27 @@ function aconnect_get_folder($aconnect, $folder = '') {
         $folderscoid = aconnect_get_folder_sco_id($aconnect->_xmlresponse, $folder);
     }
 
+    if ($folderscoid and !empty($subfolder)) {
+        $params = array(
+            'action' => 'sco-expanded-contents',
+            'sco-id' => $folderscoid,
+            'filter-name' => $subfolder
+        );
+        $aconnect->create_request($params);
+        if ($aconnect->call_success()) {
+            $folderscoid = aconnect_get_sub_folder_sco_id($aconnect->_xmlresponse, $subfolder);
+        }
+    }
+
     return $folderscoid;
 }
 
 /**
- * TODO: comment function and return something meaningful
+ * Parse the xml response to return the folder sco-id
+ * @param string $xml Get folder details xml response 
+ * @param string $folder Name of the folder to get
+ * @return mixed sco-id or false
+ *
  */
 function aconnect_get_folder_sco_id($xml, $folder) {
     $scoid = false;
@@ -332,6 +348,39 @@ function aconnect_get_folder_sco_id($xml, $folder) {
 
     return $scoid;
 
+}
+
+/**
+ * Parse the xml response to return the sub folder sco-id
+ * @param string $xml Get subfolder details xml response 
+ * @param string $subfolder Name of the subfolder to get
+ * @return mixed sco-id or false
+ *
+ */
+function aconnect_get_sub_folder_sco_id($xml, $subfolder) {
+    $scoid = false;
+
+    $dom = new DomDocument();
+    $dom->loadXML($xml);
+
+    $domnodelist = $dom->getElementsByTagName('sco');
+
+    if (!empty($domnodelist->length)) {
+        for ($i = 0; $i < $domnodelist->length; $i++) {
+            $domnode = $domnodelist->item($i)->attributes->getNamedItem('type');
+            if (!is_null($domnode) && $domnode->nodeValue == 'folder') {
+                $domnode = $domnodelist->item($i)->attributes->getNamedItem('sco-id');
+                $foldernamenode = $domnodelist->item($i)->firstChild;
+                if (!is_null($domnode) && !is_null($foldernamenode) && $foldernamenode->nodeName == 'name'
+                        && $foldernamenode->nodeValue == $subfolder) {
+                    $scoid = (int) $domnode->nodeValue;
+
+                }
+            }
+        }
+    }
+
+    return $scoid;
 }
 
 /**
