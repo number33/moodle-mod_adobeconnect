@@ -21,6 +21,6 @@
  */
 
 $module->component = 'mod_adobeconnect';
-$module->version   = 2013102900;
+$module->version   = 2013120600;
 $module->requires  = 2012120300;
 $module->cron      = 0;
