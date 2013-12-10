@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @package mod
@@ -7,7 +21,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/// (Replace adobeconnect with the name of your module and remove this line)
+// Replace adobeconnect with the name of your module and remove this line.
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
@@ -15,8 +29,8 @@ require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/connect_class.php');
 require_once(dirname(__FILE__).'/connect_class_dom.php');
 
-$id = optional_param('id', 0, PARAM_INT); // course_module ID, or
-$a  = optional_param('a', 0, PARAM_INT);  // adobeconnect instance ID
+$id = optional_param('id', 0, PARAM_INT); // Course_module ID, or
+$a  = optional_param('a', 0, PARAM_INT);  // Adobe Connect instance ID.
 $groupid = optional_param('group', 0, PARAM_INT);
 
 global $CFG, $USER, $DB, $PAGE, $OUTPUT, $SESSION;
@@ -59,10 +73,10 @@ require_login($course, true, $cm);
 
 $context = get_context_instance(CONTEXT_MODULE, $cm->id);
 
-// Check for submitted data
+// Check for submitted data.
 if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) && confirm_sesskey()) {
 
-    // Edit participants
+    // Edit participants.
     if (isset($formdata->participants)) {
 
         $cond = array('shortname' => 'adobeconnectpresenter');
@@ -78,13 +92,13 @@ if (($formdata = data_submitted($CFG->wwwroot . '/mod/adobeconnect/view.php')) &
 }
 
 
-// Check if the user's email is the Connect Pro user's login
+// Check if the user's email is the Connect Pro user's login.
 $usrobj = new stdClass();
 $usrobj = clone($USER);
 
 $usrobj->username = set_username($usrobj->username, $usrobj->email);
 
-/// Print the page header
+// Print the page header.
 $url = new moodle_url('/mod/adobeconnect/view.php', array('id' => $cm->id));
 
 $PAGE->set_url($url);
@@ -98,7 +112,7 @@ $stradobeconnects = get_string('modulenameplural', 'adobeconnect');
 $stradobeconnect  = get_string('modulename', 'adobeconnect');
 
 $params = array('instanceid' => $cm->instance);
-$sql = "SELECT meetingscoid ". 
+$sql = "SELECT meetingscoid ".
        "FROM {adobeconnect_meeting_groups} amg ".
        "WHERE amg.instanceid = :instanceid ";
 
@@ -110,36 +124,32 @@ if (!empty($meetscoids)) {
 
     $aconnect = aconnect_login();
 
-    // Get the forced recordings folder sco-id
-    // Get recordings that are based off of the meeting
+    // Get the forced recordings folder sco-id.
+    // Get recordings that are based off of the meeting.
     $fldid = aconnect_get_folder($aconnect, 'forced-archives');
-    foreach($meetscoids as $scoid) {
+    foreach ($meetscoids as $scoid) {
 
         $data = aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid);
 
         if (!empty($data)) {
-          // Store recordings in an array to be moved to the Adobe shared folder later on
-          $recscoids = array_merge($recscoids, array_keys($data));
+            // Store recordings in an array to be moved to the Adobe shared folder later on.
+            $recscoids = array_merge($recscoids, array_keys($data));
 
         }
 
     }
 
-    // Move the meetings to the shared content folder
+    // Move the meetings to the shared content folder.
     if (!empty($recscoids)) {
         $recscoids = array_flip($recscoids);
-
-        if (aconnect_move_to_shared($aconnect, $recscoids)) {
-            // do nothing
-        }
     }
 
-    //Get the shared content folder sco-id
-    // Create a list of recordings moved to the shared content folder
+    // Get the shared content folder sco-id.
+    // Create a list of recordings moved to the shared content folder.
     $fldid = aconnect_get_folder($aconnect, 'content');
-    foreach($meetscoids as $scoid) {
+    foreach ($meetscoids as $scoid) {
 
-        // May need this later on
+        // May need this later on.
         $data = aconnect_get_recordings($aconnect, $fldid, $scoid->meetingscoid);
 
         if (!empty($data)) {
@@ -157,7 +167,7 @@ if (!empty($meetscoids)) {
 
     // Clean up any duplciated meeting recordings.  Duplicated meeting recordings happen when the
     // recording settings on ACP server change between "publishing recording links in meeting folders" and
-    // not "publishing recording links in meeting folders"
+    // not "publishing recording links in meeting folders".
     $names = array();
     foreach ($recording as $key => $recordingarray) {
 
@@ -179,48 +189,32 @@ if (!empty($meetscoids)) {
             }
         }
     }
-    
+
     unset($names);
 
-
-    // Check if the user exists and if not create the new user
-    if (!($usrprincipal = aconnect_user_exists($aconnect, $usrobj))) {
-        if (!($usrprincipal = aconnect_create_user($aconnect, $usrobj))) {
-            // DEBUG
-            debugging("error creating user", DEBUG_DEVELOPER);
-
-//            print_object("error creating user");
-//            print_object($aconnect->_xmlresponse);
-            $validuser = false;
-        }
-    }
+    // Check if the user exists and if not create the new user.
+    $userprincipalid = aconnect_create_user($aconnect, $usrobj);
 
     // Check the user's capability and assign them view permissions to the recordings folder
-    // if it's a public meeting give them permissions regardless
+    // if it's a public meeting give them permissions regardless.
     if ($cm->groupmode) {
 
 
         if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
             has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
-            if (aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE)) {
-                //DEBUG
-                // echo 'true';
-            } else {
-                //DEBUG
+            if (!aconnect_assign_user_perm($aconnect, $userprincipalid, $fldid, ADOBE_VIEW_ROLE)) {
+                // DEBUG.
                 debugging("error assign user recording folder permissions", DEBUG_DEVELOPER);
-//                print_object('error assign user recording folder permissions');
-//                print_object($aconnect->_xmlrequest);
-//                print_object($aconnect->_xmlresponse);
             }
         }
     } else {
-        aconnect_assign_user_perm($aconnect, $usrprincipal, $fldid, ADOBE_VIEW_ROLE);
+        aconnect_assign_user_perm($aconnect, $userprincipalid, $fldid, ADOBE_VIEW_ROLE);
     }
 
     aconnect_logout($aconnect);
 }
 
-// Log in the current user
+// Log in the current user.
 $login = $usrobj->username;
 $password  = $usrobj->username;
 $https = false;
@@ -235,31 +229,31 @@ $aconnect = new connect_class_dom($CFG->adobeconnect_host, $CFG->adobeconnect_po
 $aconnect->request_http_header_login(1, $login);
 $adobesession = $aconnect->get_cookie();
 
-// The batch of code below handles the display of Moodle groups
+// The batch of code below handles the display of Moodle groups.
 if ($cm->groupmode) {
 
     $querystring = array('id' => $cm->id);
     $url = new moodle_url('/mod/adobeconnect/view.php', $querystring);
 
-    // Retrieve a list of groups that the current user can see/manage
+    // Retrieve a list of groups that the current user can see/manage.
     $user_groups = groups_get_activity_allowed_groups($cm, $USER->id);
 
     if ($user_groups) {
 
-        // Print groups selector drop down
+        // Print groups selector drop down.
         groups_print_activity_menu($cm, $url, false, true);
 
 
-        // Retrieve the currently active group for the user's session
+        // Retrieve the currently active group for the user's session.
         $groupid = groups_get_activity_group($cm);
 
-        /* Depending on the series of events groups_get_activity_group will 
+        /* Depending on the series of events groups_get_activity_group will
          * return a groupid value of  0 even if the user belongs to a group.
          * If the groupid is set to 0 then use the first group that the user
          * belongs to.
          */
         $aag = has_capability('moodle/site:accessallgroups', $context);
-        
+
         if (0 == $groupid) {
             $groups = groups_get_user_groups($cm->course, $USER->id);
             $groups = current($groups);
@@ -267,7 +261,7 @@ if ($cm->groupmode) {
             if (!empty($groups)) {
 
                 $groupid = key($SESSION->activegroup[$cm->course]);
-            } elseif ($aag) {
+            } else if ($aag) {
                 /* If the user does not explicitely belong to any group
                  * check their capabilities to see if they have access
                  * to manage all groups; and if so display the first course
@@ -282,11 +276,11 @@ if ($cm->groupmode) {
 
 $aconnect = aconnect_login();
 
-// Get the Meeting details
+// Get the Meeting details.
 $cond = array('instanceid' => $adobeconnect->id, 'groupid' => $groupid);
 $scoid = $DB->get_field('adobeconnect_meeting_groups', 'meetingscoid', $cond);
 
-$meetfldscoid = aconnect_get_folder($aconnect, 'meetings');
+$meetfldscoid = aconnect_get_folder($aconnect, 'meetings', $CFG->adobeconnect_admin_subfolder);
 
 
 $filter = array('filter-sco-id' => $scoid);
@@ -301,15 +295,14 @@ if (($meeting = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter))) {
         $username     = get_connect_username($adobeconnect->userid);
         $meetfldscoid = aconnect_get_user_folder_sco_id($aconnect, $username);
         $meeting      = aconnect_meeting_exists($aconnect, $meetfldscoid, $filter);
-        
+
         if (!empty($meeting)) {
             $meeting = current($meeting);
         }
     }
-    
-    // If meeting does not exist then display an error message
-    if (empty($meeting)) {
 
+    // If meeting does not exist then display an error message.
+    if (empty($meeting)) {
         $message = get_string('nomeeting', 'adobeconnect');
         echo $OUTPUT->notification($message);
         aconnect_logout($aconnect);
@@ -326,11 +319,11 @@ $renderer = $PAGE->get_renderer('mod_adobeconnect');
 $meetingdetail = new stdClass();
 $meetingdetail->name = html_entity_decode($meeting->name);
 
-// Determine if the Meeting URL is to appear
+// Determine if the Meeting URL is to appear.
 if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     has_capability('mod/adobeconnect:meetinghost', $context)) {
 
-    // Include the port number only if it is a port other than 80
+    // Include the port number only if it is a port other than 80.
     $port = '';
 
     if (!empty($CFG->adobeconnect_port) and (80 != $CFG->adobeconnect_port)) {
@@ -350,9 +343,9 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
 
 
     $url = $protocol.$CFG->adobeconnect_meethost.$port.'/admin/meeting/sco/info?principal-id='.
-           $usrprincipal.'&amp;sco-id='.$scoid.'&amp;session='.$adobesession;
+           $userprincipalid.'&sco-id='.$scoid.'&session='.$adobesession;
 
-    // Get the server meeting details link
+    // Get the server meeting details link.
     $meetingdetail->servermeetinginfo = $url;
 
 } else {
@@ -360,41 +353,41 @@ if (has_capability('mod/adobeconnect:meetingpresenter', $context) or
     $meetingdetail->servermeetinginfo = '';
 }
 
-// Determine if the user has the permissions to assign perticipants
+// Determine if the user has the permissions to assign perticipants.
 $meetingdetail->participants = false;
 
-if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
-    has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id)){
+if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) ||
+    has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id)) {
 
     $meetingdetail->participants = true;
 }
 
-//  CONTRIB-2929 - remove date format and let Moodle decide the format
-// Get the meeting start time
+// CONTRIB-2929 - remove date format and let Moodle decide the format.
+// Get the meeting start time.
 $time = userdate($adobeconnect->starttime);
 $meetingdetail->starttime = $time;
 
-// Get the meeting end time
+// Get the meeting end time.
 $time = userdate($adobeconnect->endtime);
 $meetingdetail->endtime = $time;
 
-// Get the meeting intro text
+// Get the meeting intro text.
 $meetingdetail->intro = $adobeconnect->intro;
 $meetingdetail->introformat = $adobeconnect->introformat;
 
 echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
-// If groups mode is enabled for the activity and the user belongs to a group
+// If groups mode is enabled for the activity and the user belongs to a group.
 if (NOGROUPS != $cm->groupmode && 0 != $groupid) {
 
     echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
-} elseif (NOGROUPS == $cm->groupmode) { 
+} else if (NOGROUPS == $cm->groupmode) {
 
-    // If groups mode is disabled
+    // If groups mode is disabled.
     echo $renderer->display_meeting_detail($meetingdetail, $id, $groupid);
 } else {
 
-    // If groups mode is enabled but the user is not in a group
+    // If groups mode is enabled but the user is not in a group.
     echo $renderer->display_no_groups_message();
 }
 
@@ -403,24 +396,24 @@ echo $OUTPUT->box_end();
 echo '<br />';
 
 $showrecordings = false;
-// Check if meeting is private, if so check the user's capability.  If public show recorded meetings
+// Check if meeting is private, if so check the user's capability.  If public show recorded meetings.
 if (!$adobeconnect->meetingpublic) {
 
-    // Check capabilities
-    if (has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
+    // Check capabilities.
+    if (has_capability('mod/adobeconnect:meetinghost', $context, $usrobj->id) or
+        has_capability('mod/adobeconnect:meetingpresenter', $context, $usrobj->id) or
         has_capability('mod/adobeconnect:meetingparticipant', $context, $usrobj->id)) {
         $showrecordings = true;
     }
 } else {
-    
-    // Check group mode and group membership
+    // Check group mode and group membership.
     $showrecordings = true;
 }
 
-// Lastly check group mode and group membership
+// Lastly check group mode and group membership.
 if (NOGROUPS != $cm->groupmode && 0 != $groupid) {
     $showrecordings = $showrecordings && true;
-} elseif (NOGROUPS == $cm->groupmode) {
+} else if (NOGROUPS == $cm->groupmode) {
     $showrecording = $showrecordings && true;
 } else {
     $showrecording = $showrecordings && false;
@@ -431,7 +424,7 @@ $recordings = $recording;
 if ($showrecordings and !empty($recordings)) {
     echo $OUTPUT->box_start('generalbox', 'meetingsummary');
 
-    // Echo the rendered HTML to the page
+    // Echo the rendered HTML to the page.
     echo $renderer->display_meeting_recording($recordings, $cm->id, $groupid, $scoid);
 
     echo $OUTPUT->box_end();
@@ -440,5 +433,5 @@ if ($showrecordings and !empty($recordings)) {
 add_to_log($course->id, 'adobeconnect', 'view',
            "view.php?id=$cm->id", "View {$adobeconnect->name} details", $cm->id);
 
-/// Finish the page
+// Finish the page.
 echo $OUTPUT->footer();

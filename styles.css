@@ -26,7 +26,7 @@
 
 .aconbtnrow .aconbtnjoin, .aconbtnrow .aconbtnroles {
     display: inline;
-
+    margin-left: 4px;
 }
 
 #aconmeetnametitle {

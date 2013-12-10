@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -35,16 +34,11 @@ class restore_adobeconnect_activity_structure_step extends restore_activity_stru
 
         $paths = array();
         $userinfo = false;
-//        $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('adobeconnect', '/activity/adobeconnect');
         $paths[] = new restore_path_element('adobeconnect_meeting_group', '/activity/adobeconnect/meeting_groups/meeting_group');
-//        if ($userinfo) {
-//            $paths[] = new restore_path_element('survey_answer', '/activity/survey/answers/answer');
-//            $paths[] = new restore_path_element('survey_analys', '/activity/survey/analysis/analys');
-//        }
 
-        // Return the paths wrapped into standard activity structure
+        // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
     }
 
@@ -57,9 +51,9 @@ class restore_adobeconnect_activity_structure_step extends restore_activity_stru
         $data->timemodified = $this->apply_date_offset($data->timemodified);
         $data->timecreated = $this->apply_date_offset($data->timecreated);
 
-        // insert the adobeconnect record
+        // Insert the adobeconnect record.
         $newitemid = $DB->insert_record('adobeconnect', $data);
-        // immediately after inserting "activity" record, call this
+        // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
 
@@ -73,11 +67,11 @@ class restore_adobeconnect_activity_structure_step extends restore_activity_stru
         $newitemid = $DB->insert_record('adobeconnect_meeting_groups', $data);
 
         // No need to save this mapping as far as nothing depend on it
-        // (child paths, file areas nor links decoder)
+        // (child paths, file areas nor links decoder).
     }
 
     protected function after_execute() {
-        // Add survey related files, no need to match by itemname (just internally handled context)
+        // Add survey related files, no need to match by itemname (just internally handled context).
         $this->add_related_files('mod_adobeconnect', 'intro', null);
     }
 }
